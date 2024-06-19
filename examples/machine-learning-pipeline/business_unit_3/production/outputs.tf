@@ -21,6 +21,18 @@ output "composer" {
   description = "Cloud Composer Environment."
 }
 
+//add_r
+output "machine_learning_project_number_prod" {
+  description = "Production machine learning project number."
+  value       = local.machine_learning_project_number_prod
+}
+
+//add_r
+output "machine_learning_project_number_nonprod" {
+  description = "Non-production machine learning project number."
+  value       = local.machine_learning_project_number_nonprod
+}
+
 ########################
 #      Metadata        #
 ########################

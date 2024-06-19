@@ -15,10 +15,12 @@
  */
 
 locals {
-  machine_learning_project_id = data.terraform_remote_state.projects_env.outputs.machine_learning_project_id
-  machine_learning_kms_keys   = data.terraform_remote_state.projects_env.outputs.machine_learning_kms_keys
-  service_catalog_repo_name   = data.terraform_remote_state.projects_shared.outputs.service_catalog_repo_name
-  service_catalog_project_id  = data.terraform_remote_state.projects_shared.outputs.service_catalog_project_id
+  machine_learning_project_id             = data.terraform_remote_state.projects_env.outputs.machine_learning_project_id
+  machine_learning_kms_keys               = data.terraform_remote_state.projects_env.outputs.machine_learning_kms_keys
+  service_catalog_repo_name               = data.terraform_remote_state.projects_shared.outputs.service_catalog_repo_name
+  service_catalog_project_id              = data.terraform_remote_state.projects_shared.outputs.service_catalog_project_id
+  machine_learning_project_number_prod    = data.terraform_remote_state.projects_nonproduction.outputs.machine_learning_project_number ///add_r
+  machine_learning_project_number_nonprod = data.terraform_remote_state.projects_production.outputs.machine_learning_project_number    ///add_r
 }
 
 data "terraform_remote_state" "projects_env" {

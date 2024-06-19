@@ -39,6 +39,18 @@ variable "project_id" {
   type        = string
 }
 
+//add_r
+variable "non-production_project_number" {
+  description = "Non Production Environments Machine Learning Project Number"
+  type        = string
+}
+
+//add_r
+variable "production_project_number" {
+  description = "Production Environments Machine Learning Project Number"
+  type        = string
+}
+
 variable "region" {
   type        = string
   description = "The resource region, one of [us-central1, us-east4]."
