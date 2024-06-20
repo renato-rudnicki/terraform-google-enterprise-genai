@@ -34,20 +34,13 @@ variable "business_code" {
 
 }
 
-variable "project_id" {
-  description = "Environments Machine Learning Project ID"
-  type        = string
-}
-
-//add_r
-variable "non-production_project_number" {
+variable "project_number" {
   description = "Non Production Environments Machine Learning Project Number"
   type        = string
 }
 
-//add_r
-variable "production_project_number" {
-  description = "Production Environments Machine Learning Project Number"
+variable "project_id" {
+  description = "Environments Machine Learning Project ID"
   type        = string
 }
 
