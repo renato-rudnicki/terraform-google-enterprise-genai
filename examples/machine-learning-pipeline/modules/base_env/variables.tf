@@ -39,6 +39,26 @@ variable "project_id" {
   type        = string
 }
 
+variable "non_production_project_number" {
+  description = "Non-production Machine Learning Project Number"
+  type        = string
+}
+
+variable "non_production_project_id" {
+  description = "Non-production Machine Learning Project ID"
+  type        = string
+}
+
+variable "production_project_number" {
+  description = "Production Machine Learning Project Number"
+  type        = string
+}
+
+variable "production_project_id" {
+  description = "Production Machine Learning Project ID"
+  type        = string
+}
+
 variable "region" {
   type        = string
   description = "The resource region, one of [us-central1, us-east4]."
