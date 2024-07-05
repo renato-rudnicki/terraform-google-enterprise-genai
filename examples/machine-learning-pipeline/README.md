@@ -2,6 +2,16 @@
 
 This example demonstrates the process of interactive coding and experimentation using the Google Vertex AI Workbench for data scientists. The guide outlines the creation of a machine learning (ML) pipeline within a notebook on a Google Vertex AI Workbench Instance.
 
+This environment is set up for interactive coding and experimentations. After the project is up, the vertex workbench is deployed from service catalog and The datascientis can use it to write their code including any experiments, data processing code and pipeline components. In addition, a cloud storage bucket is deployed to use as the storage for our operations. Optionally a composer environment is which will later be used to schedule the pipeline run on intervals.
+
+Each environment, Development, Non-Production and Production have their own purpose and they are not a mirror from the previous environment.
+
+The Development environment is responsible to create pipeline components and make sure there are no issues in the environment.
+
+The non-production environment will result in triggering the pipeline if approved. The vertex pipeline takes about 30 minutes to finish.
+
+The production environment will provide an endpoint in the project which you can use to make prediction requests.
+
 ## Steps Involved
 
 - Creating the ML Pipeline:
@@ -819,8 +829,6 @@ Notably:
 
 
 ## Machine Learning Pipeline
-
-This environment is set up for interactive coding and experimentations. After the project is up, the vertex workbench is deployed from service catalog and The datascientis can use it to write their code including any experiments, data processing code and pipeline components. In addition, a cloud storage bucket is deployed to use as the storage for our operations. Optionally a composer environment is which will later be used to schedule the pipeline run on intervals.
 
 For our pipeline which trains and deploys a model on the [census income dataset](https://archive.ics.uci.edu/dataset/20/census+income), we use a notebook in the dev workbench to create our pipeline components, put them together into a pipeline and do a dry run of the pipeline to make sure there are no issues. You can access the repository [here](./assets/Vertexpipeline/).
 
