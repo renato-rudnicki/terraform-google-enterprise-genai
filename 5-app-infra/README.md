@@ -450,13 +450,20 @@ The pipeline also listens for changes made to `plan`, `development`, `non-produc
    mkdir ml-artifact-publish
    ```
 
+1. Navigate to the folder you created and initialize a local Git repository to manage versions locally. Then, create the environment branches.
+
+   ```bash
+   cd ml-artifact-publish/
+   git init
+   git commit -m "initialize empty directory" --allow-empty
+   git checkout -b shared
+   ```
+
 1. Navigate into the repo, change to non-main branch and copy contents of genAI to new repo.
    All subsequent steps assume you are running them from the ml-artifact-publish directory.
    If you run them from another directory, adjust your copy paths accordingly.
 
    ```bash
-   cd ml-artifact-publish/
-
    cp -RT ../terraform-google-enterprise-genai/5-app-infra/projects/artifact-publish/ .
    cp -R ../terraform-google-enterprise-genai/5-app-infra/modules/ ./modules
    cp ../terraform-google-enterprise-genai/build/cloudbuild-tf-* .
@@ -472,10 +479,10 @@ The pipeline also listens for changes made to `plan`, `development`, `non-produc
 
 1. Update `common.auto.tfvars` file with values from your environment.
 
-1. Use `terraform output` to get the project backend bucket value from 0-bootstrap.
+1. Use `terraform output` to get the project backend bucket value from gcp-bootstrap.
 
    ```bash
-   export remote_state_bucket=$(terraform -chdir="../terraform-google-enterprise-genai/0-bootstrap/" output -raw projects_gcs_bucket_tfstate)
+   export remote_state_bucket=$(terraform -chdir="../gcp-bootstrap/" output -raw projects_gcs_bucket_tfstate)
    echo "remote_state_bucket = ${remote_state_bucket}"
    sed -i "s/REMOTE_STATE_BUCKET/${remote_state_bucket}/" ./common.auto.tfvars
    ```
@@ -488,10 +495,10 @@ The pipeline also listens for changes made to `plan`, `development`, `non-produc
    member="user:$(gcloud auth list --filter="status=ACTIVE" --format="value(account)")"
    echo ${member}
 
-   project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
+   project_id=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
    echo ${project_id}
 
-   terraform_sa=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-artifact-publish"' --raw-output)
+   terraform_sa=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-artifact-publish"' --raw-output)
    echo ${terraform_sa}
 
    gcloud iam service-accounts add-iam-policy-binding ${terraform_sa} --project ${project_id} --member="${member}" --role="roles/iam.serviceAccountTokenCreator"
@@ -500,24 +507,23 @@ The pipeline also listens for changes made to `plan`, `development`, `non-produc
 1. Update `backend.tf` with your bucket from the infra pipeline output.
 
    ```bash
-   export backend_bucket=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -json state_buckets | jq '."ml-artifact-publish"' --raw-output)
+   export backend_bucket=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -json state_buckets | jq '."ml-artifact-publish"' --raw-output)
    echo "backend_bucket = ${backend_bucket}"
 
    for i in `find -name 'backend.tf'`; do sed -i "s/UPDATE_APP_INFRA_BUCKET/${backend_bucket}/" $i; done
    ```
 
 We will now deploy each of our environments (development/production/non-production) using this script.
-When using Cloud Build or Jenkins as your CI/CD tool, each environment corresponds to a branch in the repository for the `5-app-infra` step. Only the corresponding environment is applied.
 
 To use the `validate` option of the `tf-wrapper.sh` script, please follow the [instructions](https://cloud.google.com/docs/terraform/policy-validation/validate-policies#install) to install the terraform-tools component.
 
 1. Use `terraform output` to get the Infra Pipeline Project ID from 4-projects output.
 
    ```bash
-   export INFRA_PIPELINE_PROJECT_ID=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
+   export INFRA_PIPELINE_PROJECT_ID=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
    echo ${INFRA_PIPELINE_PROJECT_ID}
 
-   export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-artifact-publish"' --raw-output)
+   export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-artifact-publish"' --raw-output)
    echo ${GOOGLE_IMPERSONATE_SERVICE_ACCOUNT}
    ```
 
@@ -538,6 +544,8 @@ To use the `validate` option of the `tf-wrapper.sh` script, please follow the [i
 
    ```bash
    ./tf-wrapper.sh apply shared
+   git add .
+   git commit -m "Initial shared commit."
    ```
 
 If you received any errors or made any changes to the Terraform config or `common.auto.tfvars` you must re-run `./tf-wrapper.sh plan <env>` before running `./tf-wrapper.sh apply <env>`.
@@ -561,7 +569,7 @@ unset GOOGLE_IMPERSONATE_SERVICE_ACCOUNT
 1. Grab the Artifact Project ID
 
    ```bash
-   export ARTIFACT_PROJECT_ID=$(terraform -chdir="terraform-google-enterprise-genai/4-projects/ml_business_unit/shared" output -raw common_artifacts_project_id)
+   export ARTIFACT_PROJECT_ID=$(terraform -chdir="gcp-projects/ml_business_unit/shared" output -raw common_artifacts_project_id)
    echo ${ARTIFACT_PROJECT_ID}
    ```
 
@@ -605,13 +613,20 @@ unset GOOGLE_IMPERSONATE_SERVICE_ACCOUNT
    mkdir ml-service-catalog
    ```
 
+1. Navigate to the folder you created and initialize a local Git repository to manage versions locally. Then, create the environment branches.
+
+   ```bash
+   cd ml-service-catalog
+   git init
+   git commit -m "initialize empty directory" --allow-empty
+   git checkout -b shared
+   ```
+
 1. Navigate into the repo, change to non-main branch and copy contents of foundation to new repo.
    All subsequent steps assume you are running them from the ml-service-catalog directory.
    If you run them from another directory, adjust your copy paths accordingly.
 
    ```bash
-   cd ml-service-catalog
-
    cp -RT ../terraform-google-enterprise-genai/5-app-infra/projects/service-catalog/ .
    cp -R ../terraform-google-enterprise-genai/5-app-infra/modules/ ./modules
    cp ../terraform-google-enterprise-genai/build/cloudbuild-tf-* .
@@ -625,10 +640,10 @@ unset GOOGLE_IMPERSONATE_SERVICE_ACCOUNT
    mv common.auto.example.tfvars common.auto.tfvars
    ```
 
-1. Update the file with values from your environment and 0-bootstrap. See any of the business unit 1 envs folders [README.md](./ml_business_unit/production/README.md) files for additional information on the values in the `common.auto.tfvars` file.
+1. Update the file with values from your environment and gcp-bootstrap. See any of the business unit 1 envs folders [README.md](./ml_business_unit/production/README.md) files for additional information on the values in the `common.auto.tfvars` file.
 
    ```bash
-   export remote_state_bucket=$(terraform -chdir="../terraform-google-enterprise-genai/0-bootstrap/" output -raw projects_gcs_bucket_tfstate)
+   export remote_state_bucket=$(terraform -chdir="../gcp-bootstrap/" output -raw projects_gcs_bucket_tfstate)
    echo "remote_state_bucket = ${remote_state_bucket}"
    sed -i "s/REMOTE_STATE_BUCKET/${remote_state_bucket}/" ./common.auto.tfvars
    ```
@@ -636,7 +651,7 @@ unset GOOGLE_IMPERSONATE_SERVICE_ACCOUNT
 1. Update `backend.tf` with your bucket from the infra pipeline output.
 
    ```bash
-   export backend_bucket=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -json state_buckets | jq '."ml-service-catalog"' --raw-output)
+   export backend_bucket=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -json state_buckets | jq '."ml-service-catalog"' --raw-output)
    echo "backend_bucket = ${backend_bucket}"
 
    for i in `find -name 'backend.tf'`; do sed -i "s/UPDATE_APP_INFRA_BUCKET/${backend_bucket}/" $i; done
@@ -645,7 +660,7 @@ unset GOOGLE_IMPERSONATE_SERVICE_ACCOUNT
 1. Update the `log_bucket` variable with the value of the `logs_export_storage_bucket_name`.
 
    ```bash
-   export log_bucket=$(terraform -chdir="../terraform-google-enterprise-genai/1-org/envs/shared" output -raw logs_export_storage_bucket_name)
+   export log_bucket=$(terraform -chdir="../gcp-org/envs/shared" output -raw logs_export_storage_bucket_name)
    echo "log_bucket = ${log_bucket}"
    sed -i "s/REPLACE_LOG_BUCKET/${log_bucket}/" ./common.auto.tfvars
    ```
@@ -653,32 +668,31 @@ unset GOOGLE_IMPERSONATE_SERVICE_ACCOUNT
 1. Provide the user permissions to run the terraform locally with the `serviceAccountTokenCreator` permission.
 
    ```bash
-   (cd ../terraform-google-enterprise-genai/4-projects && ./tf-wrapper.sh init shared)
+   (cd ../gcp-projects && ./tf-wrapper.sh init shared)
 
    member="user:$(gcloud auth list --filter="status=ACTIVE" --format="value(account)")"
    echo ${member}
 
-   project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
+   project_id=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
    echo ${project_id}
 
-   terraform_sa=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-service-catalog"' --raw-output)
+   terraform_sa=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-service-catalog"' --raw-output)
    echo ${terraform_sa}
 
    gcloud iam service-accounts add-iam-policy-binding ${terraform_sa} --project ${project_id} --member="${member}" --role="roles/iam.serviceAccountTokenCreator"
    ```
 
 We will now deploy each of our environments (development/production/non-production) using this script.
-When using Cloud Build or Jenkins as your CI/CD tool, each environment corresponds to a branch in the repository for the `5-app-infra` step. Only the corresponding environment is applied.
 
 To use the `validate` option of the `tf-wrapper.sh` script, please follow the [instructions](https://cloud.google.com/docs/terraform/policy-validation/validate-policies#install) to install the terraform-tools component.
 
 1. Use `terraform output` to get the Infra Pipeline Project ID from 4-projects output.
 
    ```bash
-   export INFRA_PIPELINE_PROJECT_ID=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
+   export INFRA_PIPELINE_PROJECT_ID=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
    echo ${INFRA_PIPELINE_PROJECT_ID}
 
-   export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-service-catalog"' --raw-output)
+   export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-service-catalog"' --raw-output)
    echo ${GOOGLE_IMPERSONATE_SERVICE_ACCOUNT}
    ```
 
@@ -699,6 +713,8 @@ To use the `validate` option of the `tf-wrapper.sh` script, please follow the [i
 
    ```bash
    ./tf-wrapper.sh apply shared
+   git add .
+   git commit -m "Initial shared commit."
    ```
 
 If you received any errors or made any changes to the Terraform config or `common.auto.tfvars` you must re-run `./tf-wrapper.sh plan <env>` before running `./tf-wrapper.sh apply <env>`.
@@ -722,7 +738,7 @@ After executing this stage, unset the `GOOGLE_IMPERSONATE_SERVICE_ACCOUNT` envir
 1. Grab the Service Catalogs ID
 
    ```bash
-   export SERVICE_CATALOG_PROJECT_ID=$(terraform -chdir="terraform-google-enterprise-genai/4-projects/ml_business_unit/shared" output -raw service_catalog_project_id)
+   export SERVICE_CATALOG_PROJECT_ID=$(terraform -chdir="gcp-projects/ml_business_unit/shared" output -raw service_catalog_project_id)
    echo ${SERVICE_CATALOG_PROJECT_ID}
    ```
 
