@@ -673,44 +673,45 @@ To create new ingress/egress rules on the VPC-SC perimiter, follow the steps bel
 
 #### `development` environment
 
-1. Navigate into `3-networks-dual-svpc` directory:
+1. Navigate into `gcp-networks` directory:
 
     ```bash
-    cd 3-networks-dual-svpc/
+    cd gcp-networks/
+    git checkout development
     ```
 
 1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" on your environment by running:
 
     ```bash
-    export ml_cb_sa=$(terraform -chdir="../4-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
+    export ml_cb_sa=$(terraform -chdir="../gcp-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
     echo $ml_cb_sa
     ```
 
 1. Retrieve the value for "sa-terraform-env@[prj_b_seed_project_id].iam.gserviceaccount.com" on your environment by running:
 
     ```bash
-    export env_step_sa=$(terraform -chdir="../../0-bootstrap/envs/shared" output -raw environment_step_terraform_service_account_email)
+    export env_step_sa=$(terraform -chdir="../gcp-bootstrap/envs/shared" output -raw environment_step_terraform_service_account_email)
     echo $env_step_sa
     ```
 
 1. Retrieve the value for `prj_d_logging_project_number`:
 
     ```bash
-    terraform -chdir="../2-environments/envs/development" init
+    terraform -chdir="../gcp-environments/envs/development" init
 
-    export prj_d_logging_project_number=$(terraform -chdir="../2-environments/envs/development" output -raw env_log_project_number)
+    export prj_d_logging_project_number=$(terraform -chdir="../gcp-environments/envs/development" output -raw env_log_project_number)
     echo $prj_d_logging_project_number
     ```
 
 1. Retrieve the values for `prj_d_machine_learning_project_id` and `prj_d_machine_learning_project_number`:
 
     ```bash
-    terraform -chdir="../4-projects/ml_business_unit/development" init
+    terraform -chdir="../gcp-projects/ml_business_unit/development" init
 
-    export prj_d_machine_learning_project_id=$(terraform -chdir="../4-projects/ml_business_unit/development" output -raw machine_learning_project_id)
+    export prj_d_machine_learning_project_id=$(terraform -chdir="../gcp-projects/ml_business_unit/development" output -raw machine_learning_project_id)
     echo $prj_d_machine_learning_project_id
 
-    export prj_d_machine_learning_project_number=$(terraform -chdir="../4-projects/ml_business_unit/development" output -raw machine_learning_project_number)
+    export prj_d_machine_learning_project_number=$(terraform -chdir="../gcp-projects/ml_business_unit/development" output -raw machine_learning_project_number)
     echo $prj_d_machine_learning_project_number
     ```
 
@@ -735,7 +736,7 @@ To create new ingress/egress rules on the VPC-SC perimiter, follow the steps bel
 Once there, select the perimeter that is associated with the environment (eg. `development`). Copy the string under Perimeter Name and place it under `YOUR_ACCESS_LEVEL` or by running the following `gcloud` command:
 
     ```bash
-    export org_id=$(terraform -chdir="../1-org/envs/shared" output  -raw org_id)
+    export org_id=$(terraform -chdir="../gcp-org/envs/shared" output  -raw org_id)
     echo $org_id
 
     export policy_id=$(gcloud access-context-manager policies list --organization $org_id --format="value(name)")
@@ -748,7 +749,7 @@ Once there, select the perimeter that is associated with the environment (eg. `d
 1. Retrieve `env_kms_project_number` variable value:
 
     ```bash
-    export env_kms_project_number=$(terraform -chdir="../2-environments/envs/development" output -raw env_kms_project_number)
+    export env_kms_project_number=$(terraform -chdir="../gcp-environments/envs/development" output -raw env_kms_project_number)
     echo $env_kms_project_number
     ```
 
@@ -767,7 +768,7 @@ Once there, select the perimeter that is associated with the environment (eg. `d
 1. Retrieve the value of `common_artifacts_project_id` (note that this is a value from `shared` environment, this means that gcp-projects must be initialized on production branch):
 
     ```bash
-    export directory="../4-projects/ml_business_unit/shared"
+    export directory="../gcp-projects/ml_business_unit/shared"
     (cd $directory && git checkout production)
 
     export common_artifacts_project_id=$(terraform -chdir="$directory" output -raw common_artifacts_project_id)
@@ -780,12 +781,12 @@ Once there, select the perimeter that is associated with the environment (eg. `d
 1. Retrieve the value for `prj_d_logging_project_number`:
 
     ```bash
-    export prj_d_logging_project_number=$(terraform -chdir="../2-environments/envs/development" output -raw env_log_project_number)
+    export prj_d_logging_project_number=$(terraform -chdir="../gcp-environments/envs/development" output -raw env_log_project_number)
     echo $prj_d_logging_project_number
     ```
 
 
-1. Run the following command to update the `3-networks-dual-svpc/envs/development/development.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/development.tf.example`.
+1. Run the following command to update the `gcp-networks/envs/development/development.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/development.tf.example`.
 
     ```bash
     sed -e "s:REPLACE_WITH_ACCESS_LEVEL:$access_level:g" \
@@ -797,49 +798,57 @@ Once there, select the perimeter that is associated with the environment (eg. `d
     ../terraform-google-enterprise-genai/examples/machine-learning-pipeline/assets/vpc-sc-policies/development.tf.example > envs/development/development.auto.tfvars
     ```
 
-1. Apply the results for development environment on `3-networks-dual-svpc`.
+1. Apply the results for development environment on `gcp-networks`.
 
     ```bash
     ./tf-wrapper.sh plan development
     ./tf-wrapper.sh apply development
+    git add .
+    git commit -m 'Update ingress and egress rules'
     ```
 
 > **DISCLAIMER**: Remember that before deleting or destroying the `machine-learning-pipeline` example, you must remove the egress/ingress policies related to the example, to prevent any inconsistencies.
 
 #### `non-production` environment
 
-1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" in your environment by running the following commands. These commands assume that you are executing them in the 3-networks-dual-svpc directory.
+1. Checkout to non-production branch:
 
     ```bash
-    export ml_cb_sa=$(terraform -chdir="../4-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
+    git checkout non-production
+    ```
+
+1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" in your environment by running the following commands. These commands assume that you are executing them in the gcp-networks directory.
+
+    ```bash
+    export ml_cb_sa=$(terraform -chdir="../gcp-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
     echo $ml_cb_sa
     ```
 
 1. Retrieve the value for "sa-terraform-env@[prj_b_seed_project_id].iam.gserviceaccount.com" on your environment by running:
 
     ```bash
-    export env_step_sa=$(terraform -chdir="../0-bootstrap/envs/shared" output -raw environment_step_terraform_service_account_email)
+    export env_step_sa=$(terraform -chdir="../gcp-bootstrap/envs/shared" output -raw environment_step_terraform_service_account_email)
     echo $env_step_sa
     ```
 
 1. Retrieve the value for `prj_n_logging_project_number`:
 
     ```bash
-    terraform -chdir="../2-environments/envs/non-production" init
+    terraform -chdir="../gcp-environments/envs/non-production" init
 
-    export prj_n_logging_project_number=$(terraform -chdir="../2-environments/envs/non-production" output -raw env_log_project_number)
+    export prj_n_logging_project_number=$(terraform -chdir="../gcp-environments/envs/non-production" output -raw env_log_project_number)
     echo $prj_n_logging_project_number
     ```
 
 1. Retrieve the values for `prj_n_machine_learning_project_id` and `prj_n_machine_learning_project_number`:
 
     ```bash
-    terraform -chdir="../4-projects/ml_business_unit/non-production" init
+    terraform -chdir="../gcp-projects/ml_business_unit/non-production" init
 
-    export prj_n_machine_learning_project_id=$(terraform -chdir="../4-projects/ml_business_unit/non-production" output -raw machine_learning_project_id)
+    export prj_n_machine_learning_project_id=$(terraform -chdir="../gcp-projects/ml_business_unit/non-production" output -raw machine_learning_project_id)
     echo $prj_n_machine_learning_project_id
 
-    export prj_n_machine_learning_project_number=$(terraform -chdir="../4-projects/ml_business_unit/non-production" output -raw machine_learning_project_number)
+    export prj_n_machine_learning_project_number=$(terraform -chdir="../gcp-projects/ml_business_unit/non-production" output -raw machine_learning_project_number)
     echo $prj_n_machine_learning_project_number
     ```
 
@@ -864,7 +873,7 @@ Once there, select the perimeter that is associated with the environment (eg. `d
 Once there, select the perimeter that is associated with the environment (eg. `non-production`). Copy the string under Perimeter Name and place it under `YOUR_ACCESS_LEVEL` or by running the following `gcloud` command:
 
     ```bash
-    export org_id=$(terraform -chdir="../1-org/envs/shared" output  -raw org_id)
+    export org_id=$(terraform -chdir="../gcp-org/envs/shared" output  -raw org_id)
     echo $org_id
 
     export policy_id=$(gcloud access-context-manager policies list --organization $org_id --format="value(name)")
@@ -878,7 +887,7 @@ Once there, select the perimeter that is associated with the environment (eg. `n
 1. Retrieve `env_kms_project_number` variable value:
 
     ```bash
-    export env_kms_project_number=$(terraform -chdir="../2-environments/envs/non-production" output -raw env_kms_project_number)
+    export env_kms_project_number=$(terraform -chdir="../gcp-environments/envs/non-production" output -raw env_kms_project_number)
     echo $env_kms_project_number
     ```
 
@@ -897,7 +906,7 @@ Once there, select the perimeter that is associated with the environment (eg. `n
 1. Retrieve the value of `common_artifacts_project_id` (note that this is a value from `shared` environment, this means that 4-projects must be initialized on production branch):
 
     ```bash
-    export directory="../4-projects/ml_business_unit/shared"
+    export directory="../gcp-projects/ml_business_unit/shared"
     (cd $directory && git checkout production)
 
     export common_artifacts_project_id=$(terraform -chdir="$directory" output -raw common_artifacts_project_id)
@@ -910,20 +919,20 @@ Once there, select the perimeter that is associated with the environment (eg. `n
 1. Retrieve the value for `prj_p_logging_project_number`:
 
     ```bash
-    terraform -chdir="../4-projects/ml_business_unit/production" init
+    terraform -chdir="../gcp-projects/ml_business_unit/production" init
 
-    export prj_p_machine_learning_project_number=$(terraform -chdir="../4-projects/ml_business_unit/production" output -raw machine_learning_project_number)
+    export prj_p_machine_learning_project_number=$(terraform -chdir="../gcp-projects/ml_business_unit/production" output -raw machine_learning_project_number)
     echo $prj_p_machine_learning_project_number
     ```
 
 1. Retrieve the value for `prj_n_logging_project_number`:
 
     ```bash
-    export prj_n_logging_project_number=$(terraform -chdir="../2-environments/envs/non-production" output -raw env_log_project_number)
+    export prj_n_logging_project_number=$(terraform -chdir="../gcp-environments/envs/non-production" output -raw env_log_project_number)
     echo $prj_n_logging_project_number
     ```
 
-1. Run the following command to update the `3-networks-dual-svpc/envs/non-production/non-production.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/non-production.tf.example`.
+1. Run the following command to update the `gcp-networks/envs/non-production/non-production.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/non-production.tf.example`.
 
     ```bash
     sed -e "s:REPLACE_WITH_ACCESS_LEVEL:$access_level:g" \
@@ -936,37 +945,45 @@ Once there, select the perimeter that is associated with the environment (eg. `n
       ../terraform-google-enterprise-genai/examples/machine-learning-pipeline/assets/vpc-sc-policies/non-production.tf.example > envs/non-production/non-production.auto.tfvars
     ```
 
-> *IMPORTANT*: The command above assumes you are running it on the  `3-networks-dual-svpc` directory.
+> *IMPORTANT*: The command above assumes you are running it on the  `gcp-networks` directory.
 
-1. Apply the results for non-production environment on `3-networks-dual-svpc`.
+1. Apply the results for non-production environment on `gcp-networks`.
 
     ```bash
       ./tf-wrapper.sh plan non-production
       ./tf-wrapper.sh apply non-production
+      git add .
+      git commit -m 'Update ingress and egress rules'
     ```
 
 > **DISCLAIMER**: Remember that before deleting or destroying the `machine-learning-pipeline` example, you must remove the egress/ingress policies related to the example, to prevent any inconsistencies.
 
 #### `production` environment
 
-1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" in your environment by running the following commands. These commands assume that you are executing them in the 3-networks-dual-svpc directory.
+1. Navigate into gcp-networks directory and checkout to production branch:
 
     ```bash
-    export ml_cb_sa=$(terraform -chdir="../4-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
+    git checkout production
+    ```
+
+1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" in your environment by running the following commands. These commands assume that you are executing them in the gcp-networks directory.
+
+    ```bash
+    export ml_cb_sa=$(terraform -chdir="../gcp-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
     echo $ml_cb_sa
     ```
 
 1. Retrieve the value for "sa-terraform-env@[prj_b_seed_project_id].iam.gserviceaccount.com" on your environment by running:
 
     ```bash
-    export env_step_sa=$(terraform -chdir="../0-bootstrap/envs/shared" output -raw environment_step_terraform_service_account_email)
+    export env_step_sa=$(terraform -chdir="../gcp-bootstrap/envs/shared" output -raw environment_step_terraform_service_account_email)
     echo $env_step_sa
     ```
 
 1. Retrieve the value for `prj_p_logging_project_number`:
 
     ```bash
-    terraform -chdir="../2-environments/envs/production" init
+    terraform -chdir="../gcp-environments/envs/production" init
 
     export prj_p_logging_project_number=$(terraform -chdir="../gcp-environments/envs/production" output -raw env_log_project_number)
     echo $prj_p_logging_project_number
@@ -975,10 +992,10 @@ Once there, select the perimeter that is associated with the environment (eg. `n
 1. Retrieve the values for `prj_p_machine_learning_project_id` and `prj_p_machine_learning_project_number`:
 
     ```bash
-    export prj_p_machine_learning_project_id=$(terraform -chdir="../4-projects/ml_business_unit/production" output -raw machine_learning_project_id)
+    export prj_p_machine_learning_project_id=$(terraform -chdir="../gcp-projects/ml_business_unit/production" output -raw machine_learning_project_id)
     echo $prj_p_machine_learning_project_id
 
-    export prj_p_machine_learning_project_number=$(terraform -chdir="../4-projects/ml_business_unit/production" output -raw machine_learning_project_number)
+    export prj_p_machine_learning_project_number=$(terraform -chdir="../gcp-projects/ml_business_unit/production" output -raw machine_learning_project_number)
     echo $prj_p_machine_learning_project_number
     ```
 
@@ -1004,7 +1021,7 @@ Once there, select the perimeter that is associated with the environment (eg. `n
 Once there, select the perimeter that is associated with the environment (eg. `production`). Copy the string under Perimeter Name and place it under `YOUR_ACCESS_LEVEL` or by running the following `gcloud` command:
 
     ```bash
-    export org_id=$(terraform -chdir="../1-org/envs/shared" output  -raw org_id)
+    export org_id=$(terraform -chdir="../gcp-org/envs/shared" output  -raw org_id)
     echo $org_id
 
     export policy_id=$(gcloud access-context-manager policies list --organization $org_id --format="value(name)")
@@ -1017,16 +1034,16 @@ Once there, select the perimeter that is associated with the environment (eg. `p
 1. Retrieve `env_kms_project_number` variable value:
 
     ```bash
-    export env_kms_project_number=$(terraform -chdir="../2-environments/envs/production" output -raw env_kms_project_number)
+    export env_kms_project_number=$(terraform -chdir="../gcp-environments/envs/production" output -raw env_kms_project_number)
     echo $env_kms_project_number
     ```
 
 1. Retrieve `restricted_host_project_number` variable value:
 
     ```bash
-    terraform -chdir="3-networks-dual-svpc/envs/production" init
+    terraform -chdir="gcp-networks/envs/production" init
 
-    export restricted_host_project_id=$(terraform -chdir="3-networks-dual-svpc/envs/production" output -raw restricted_host_project_id)
+    export restricted_host_project_id=$(terraform -chdir="gcp-networks/envs/production" output -raw restricted_host_project_id)
     echo $restricted_host_project_id
 
     export restricted_host_project_number=$(gcloud projects list --filter="projectId=$restricted_host_project_id" --format="value(projectNumber)")
@@ -1036,7 +1053,7 @@ Once there, select the perimeter that is associated with the environment (eg. `p
 1. Retrieve the value of `common_artifacts_project_id` (note that this is a value from `shared` environment, this means that gcp-projects must be initialized on production branch):
 
     ```bash
-    export directory="../4-projects/ml_business_unit/shared"
+    export directory="../gcp-projects/ml_business_unit/shared"
     (cd $directory && git checkout production)
 
     export common_artifacts_project_id=$(terraform -chdir="$directory" output -raw common_artifacts_project_id)
@@ -1049,11 +1066,11 @@ Once there, select the perimeter that is associated with the environment (eg. `p
 1. Retrieve the value for `prj_p_logging_project_number`:
 
     ```bash
-    export prj_p_machine_learning_project_number=$(terraform -chdir="../4-projects/ml_business_unit/production" output -raw machine_learning_project_number)
+    export prj_p_machine_learning_project_number=$(terraform -chdir="../gcp-projects/ml_business_unit/production" output -raw machine_learning_project_number)
     echo $prj_p_machine_learning_project_number
     ```
 
-1. Run the following command to update the `3-networks-dual-svpc/envs/production/production.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/production.tf.example`.
+1. Run the following command to update the `gcp-networks/envs/production/production.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/production.tf.example`.
 
     ```bash
     sed -e "s:REPLACE_WITH_ACCESS_LEVEL:$access_level:g" \
@@ -1066,15 +1083,17 @@ Once there, select the perimeter that is associated with the environment (eg. `p
     ../terraform-google-enterprise-genai/examples/machine-learning-pipeline/assets/vpc-sc-policies/production.tf.example > envs/production/production.auto.tfvars
     ```
 
-> *IMPORTANT*: The command above assumes you are running it on the  `3-networks-dual-svpc` directory.
+> *IMPORTANT*: The command above assumes you are running it on the  `gcp-networks` directory.
 
-1. Apply the results for development environment on `3-networks-dual-svpc`.
+1. Apply the results for development environment on `gcp-networks`.
 
     ```bash
     git add .
 
     ./tf-wrapper.sh plan production
     ./tf-wrapper.sh apply production
+    git add .
+    git commit -m 'Update ingress and egress rules'
 
     cd ..
     ```
@@ -1089,11 +1108,20 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
 
 ### Infrastructure Deployment with Local Terraform - Only proceed with these if you have not used Cloud Build
 
-1. The next instructions assume that you are at the same level of the `terraform-google-enterprise-genai` folder. Change into `machine-learning-pipeline` example folder, copy the Terraform wrapper script and ensure it can be executed.
+1. Create the directory `ml-machine-learning` and the environment braches. This instruction assume that you are at the same level of the `terraform-google-enterprise-genai` folder.
 
    ```bash
-   cd terraform-google-enterprise-genai/examples/machine-learning-pipeline
-   cp ../../build/tf-wrapper.sh .
+   mkdir ml-machine-learning
+   cd ml-machine-learning
+   git init
+   git commit -m "initialize empty directory" --allow-empty
+   git checkout -b plan
+   ```
+
+1. Copy the the content of `machine-learning-pipeline` folder and ensure the `tf-wrapper.sh` can be executed.
+
+   ```bash
+   cp -pR ../terraform-google-enterprise-genai/examples/machine-learning-pipeline/* .
    chmod 755 ./tf-wrapper.sh
    ```
 
@@ -1105,14 +1133,14 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
 
 1. Update `common.auto.tfvars` file with values from your environment.
 
-1. Use `terraform output` to get the project and seed backend bucket value from 0-bootstrap.
+1. Use `terraform output` to get the project and seed backend bucket value from gcp-bootstrap.
 
    ```bash
-   export remote_state_bucket=$(terraform -chdir="../../0-bootstrap/" output -raw projects_gcs_bucket_tfstate)
+   export remote_state_bucket=$(terraform -chdir="../gcp-bootstrap/" output -raw projects_gcs_bucket_tfstate)
    echo "remote_state_bucket = ${remote_state_bucket}"
    sed -i "s/REMOTE_STATE_BUCKET/${remote_state_bucket}/" ./common.auto.tfvars
 
-   export seed_state_bucket=$(terraform -chdir="../../0-bootstrap/" output -raw gcs_bucket_tfstate)
+   export seed_state_bucket=$(terraform -chdir="../gcp-bootstrap/" output -raw gcs_bucket_tfstate)
    echo "seed_state_bucket = ${seed_state_bucket}"
    sed -i "s/REPLACE_SEED_TFSTATE_BUCKET/${seed_state_bucket}/" ./common.auto.tfvars
    ```
@@ -1125,10 +1153,10 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
    member="user:$(gcloud auth list --filter="status=ACTIVE" --format="value(account)")"
    echo ${member}
 
-   project_id=$(terraform -chdir="../../4-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
+   project_id=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
    echo ${project_id}
 
-   terraform_sa=$(terraform -chdir="../../4-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-machine-learning"' --raw-output)
+   terraform_sa=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-machine-learning"' --raw-output)
    echo ${terraform_sa}
 
    gcloud iam service-accounts add-iam-policy-binding ${terraform_sa} --project ${project_id} --member="${member}" --role="roles/iam.serviceAccountTokenCreator"
@@ -1137,7 +1165,7 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
 1. Update `backend.tf` with your bucket from the infra pipeline output.
 
    ```bash
-   export backend_bucket=$(terraform -chdir="../../4-projects/ml_business_unit/shared/" output -json state_buckets | jq '."ml-machine-learning"' --raw-output)
+   export backend_bucket=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -json state_buckets | jq '."ml-machine-learning"' --raw-output)
    echo "backend_bucket = ${backend_bucket}"
 
    for i in `find -name 'backend.tf'`; do sed -i "s/UPDATE_APP_INFRA_BUCKET/${backend_bucket}/" $i; done
@@ -1146,7 +1174,7 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
 1. Update `modules/base_env/main.tf` with Service Catalog Project Id.
 
    ```bash
-   export service_catalog_project_id=$(terraform -chdir="../../4-projects/ml_business_unit/shared/" output -raw service_catalog_project_id)
+   export service_catalog_project_id=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -raw service_catalog_project_id)
    echo "service_catalog_project_id = ${service_catalog_project_id}"
 
    ## Linux
@@ -1156,10 +1184,13 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
 1. Update `vpc_project` variable with the development environment host VPC project.
 
    ```bash
-   export vpc_project=$(terraform -chdir="../../3-networks-dual-svpc/envs/development" output -raw restricted_host_project_id)
+   export directory="../gcp-networks/envs/development"
+   (cd $directory && git checkout development)
+   export vpc_project=$(terraform -chdir="../gcp-networks/envs/development" output -raw restricted_host_project_id)
    echo $vpc_project
 
    ## Linux
+   cd ../../../ml-machine-learning
    sed -i "s/REPLACE_WITH_DEV_VPC_PROJECT/${vpc_project}/g" ./modules/base_env/main.tf
    ```
 
@@ -1175,7 +1206,7 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
 1. Enable the Artifact Registry API for the `cloudbuild project`.
 
     ```bash
-    export cloudbuild_project_id=$(terraform -chdir="../../4-projects/ml_business_unit/shared" output -raw cloudbuild_project_id)
+    export cloudbuild_project_id=$(terraform -chdir="../gcp-projects/ml_business_unit/shared" output -raw cloudbuild_project_id)
     echo $cloudbuild_project_id
 
     gcloud services enable accesscontextmanager.googleapis.com --project=$cloudbuild_project_id
@@ -1184,7 +1215,7 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
 1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" on your environment by running:
 
     ```bash
-    export ml_cb_sa=$(terraform -chdir="../../4-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
+    export ml_cb_sa=$(terraform -chdir="../gcp-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
     echo $ml_cb_sa
     ```
 
@@ -1204,24 +1235,31 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
             --role=roles/artifactregistry.admin
     ```
 
+1. Commit changes.
+
+    ```bash
+    git add .
+    git commit -m "Initial plan commit."
+    ```
+
 We will now deploy each of our environments (development/production/non-production) using this script.
-When using Cloud Build or Jenkins as your CI/CD tool, each environment corresponds to a branch in the repository for the `machine-learning-pipeline` step. Only the corresponding environment is applied.
 
 To use the `validate` option of the `tf-wrapper.sh` script, please follow the [instructions](https://cloud.google.com/docs/terraform/policy-validation/validate-policies#install) to install the terraform-tools component.
 
-1. Use `terraform output` to get the Infra Pipeline Project ID from 4-projects output.
+1. Use `terraform output` to get the Infra Pipeline Project ID from gcp-projects output.
 
    ```bash
-   export INFRA_PIPELINE_PROJECT_ID=$(terraform -chdir="../../4-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
+   export INFRA_PIPELINE_PROJECT_ID=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -raw cloudbuild_project_id)
    echo ${INFRA_PIPELINE_PROJECT_ID}
 
-   export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$(terraform -chdir="../../4-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-machine-learning"' --raw-output)
+   export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$(terraform -chdir="../gcp-projects/ml_business_unit/shared/" output -json terraform_service_accounts | jq '."ml-machine-learning"' --raw-output)
    echo ${GOOGLE_IMPERSONATE_SERVICE_ACCOUNT}
    ```
 
 1. Run `init` and `plan` and review output for environment production.
 
    ```bash
+   git checkout -b production
    ./tf-wrapper.sh init production
    ./tf-wrapper.sh plan production
    ```
@@ -1230,18 +1268,21 @@ To use the `validate` option of the `tf-wrapper.sh` script, please follow the [i
 1. Run `validate` and check for violations.
 
    ```bash
-   ./tf-wrapper.sh validate production $(pwd)/../../policy-library ${INFRA_PIPELINE_PROJECT_ID}
+   ./tf-wrapper.sh validate production $(pwd)/../terraform-google-enterprise-genai/policy-library ${INFRA_PIPELINE_PROJECT_ID}
    ```
 
 1. Run `apply` production.
 
    ```bash
    ./tf-wrapper.sh apply production
+   git add .
+   git commit -m "Initial production commit."
    ```
 
 1. Run `init` and `plan` and review output for environment non-production.
 
    ```bash
+   git checkout -b non-production
    ./tf-wrapper.sh init non-production
    ./tf-wrapper.sh plan non-production
    ```
@@ -1249,18 +1290,21 @@ To use the `validate` option of the `tf-wrapper.sh` script, please follow the [i
 1. Run `validate` and check for violations.
 
    ```bash
-   ./tf-wrapper.sh validate non-production $(pwd)/../../policy-library ${INFRA_PIPELINE_PROJECT_ID}
+   ./tf-wrapper.sh validate non-production $(pwd)/../terraform-google-enterprise-genai/policy-library ${INFRA_PIPELINE_PROJECT_ID}
    ```
 
 1. Run `apply` non-production.
 
    ```bash
    ./tf-wrapper.sh apply non-production
+   git add .
+   git commit -m "Initial non-production commit."
    ```
 
 1. Run `init` and `plan` and review output for environment development.
 
    ```bash
+   git checkout -b development
    ./tf-wrapper.sh init development
    ./tf-wrapper.sh plan development
    ```
@@ -1268,13 +1312,15 @@ To use the `validate` option of the `tf-wrapper.sh` script, please follow the [i
 1. Run `validate` and check for violations.
 
    ```bash
-   ./tf-wrapper.sh validate development $(pwd)/../../policy-library ${INFRA_PIPELINE_PROJECT_ID}
+   ./tf-wrapper.sh validate development $(pwd)/../terraform-google-enterprise-genai/policy-library ${INFRA_PIPELINE_PROJECT_ID}
    ```
 
 1. Run `apply` development.
 
    ```bash
    ./tf-wrapper.sh apply development
+   git add .
+   git commit -m "Initial development commit."
    ```
 
 If you received any errors or made any changes to the Terraform config or `common.auto.tfvars` you must re-run `./tf-wrapper.sh plan <env>` before running `./tf-wrapper.sh apply <env>`.
@@ -1413,7 +1459,8 @@ For the next step, we need to update the non-production and production VPC-SC pe
 
     ```bash
 
-    cd ../../3-networks-dual-svpc/env/non-production/
+    cd ../gcp-networks/env/non-production/
+    git checkout non-production
 
     UPDATE_SA=$(printf '"%s",\n"%s",\n"%s"]' "$TRIGGER_SA" "$GCP_SA_AIPLATFORM" "$API_ROBOT_SA")
 
@@ -1440,13 +1487,15 @@ For the next step, we need to update the non-production and production VPC-SC pe
     cat common.auto.tfvars ; echo ""
     ```
 
-1. Apply the results for development environment on 3-networks-dual-svpc.
+1. Apply the results for development environment on gcp-networks.
 
     ```bash
     cd ../..
 
     ./tf-wrapper.sh plan non-production
     ./tf-wrapper.sh apply non-production
+    git add .
+    git commit -m 'Update perimeter additional members'
     ```
 
 1. Run the command below to update the `perimeter_additional_members` in `common.auto.tfvars` for the production environment.
@@ -1454,6 +1503,7 @@ For the next step, we need to update the non-production and production VPC-SC pe
     ```bash
 
     cd env/production/
+    git checkout production
 
     var_global=$(printf '"%s"]' "$GCP_SA_AIPLATFORM")
 
@@ -1480,13 +1530,16 @@ For the next step, we need to update the non-production and production VPC-SC pe
     cat common.auto.tfvars ; echo ""
     ```
 
-1. Apply the results for development environment on 3-networks-dual-svpc.
+1. Apply the results for production environment on gcp-networks.
 
     ```bash
     cd ../..
+    git checkout production
 
     ./tf-wrapper.sh plan production
     ./tf-wrapper.sh apply production
+    git add .
+    git commit -m 'Update perimeter additional members'
     ```
 
 ### Permissions
@@ -1596,12 +1649,12 @@ For the next step, we need to update the non-production and production VPC-SC pe
   1. In order to avoid having to specify a kms key for every query against a bigquery resource, we set the default project encryption key to the corresponding environment key in advance.
 
       ```bash
-      ml_project_dev=$(terraform -chdir="../../4-projects/ml_business_unit/development" output -raw machine_learning_project_id)
-      ml_project_dev_key=$(terraform -chdir="../../4-projects/ml_business_unit/development" output -json machine_learning_kms_keys)
-      ml_project_nonprd=$(terraform -chdir="../../4-projects/ml_business_unit/non-production" output -raw machine_learning_project_id)
-      ml_project_nonprod_key=$(terraform -chdir="../../4-projects/ml_business_unit/non-production" output -json machine_learning_kms_keys)
-      ml_project_prd=$(terraform -chdir="../../4-projects/ml_business_unit/production" output -raw machine_learning_project_id)
-      ml_project_prod_key=$(terraform -chdir="../../4-projects/ml_business_unit/production" output -json machine_learning_kms_keys)
+      ml_project_dev=$(terraform -chdir="../gcp-projects/ml_business_unit/development" output -raw machine_learning_project_id)
+      ml_project_dev_key=$(terraform -chdir="../gcp-projects/ml_business_unit/development" output -json machine_learning_kms_keys)
+      ml_project_nonprd=$(terraform -chdir="../gcp-projects/ml_business_unit/non-production" output -raw machine_learning_project_id)
+      ml_project_nonprod_key=$(terraform -chdir="../gcp-projects/ml_business_unit/non-production" output -json machine_learning_kms_keys)
+      ml_project_prd=$(terraform -chdir="../gcp-projects/ml_business_unit/production" output -raw machine_learning_project_id)
+      ml_project_prod_key=$(terraform -chdir="../gcp-projects/ml_business_unit/production" output -json machine_learning_kms_keys)
 
       project_key=$(echo "$ml_project_dev_key "| jq -r '."us-central1".id')
       echo "ALTER PROJECT \`$ml_project_dev\` SET OPTIONS (\`region-us-central1.default_kms_key_name\`=\"$project_key\");" | bq query --project_id "$ml_project_dev" --nouse_legacy_sql
@@ -1615,7 +1668,7 @@ For the next step, we need to update the non-production and production VPC-SC pe
 
 1. Many of the necessary service agents and permissions were deployed in all project environments for machine-learning.  Additional entries may be needed for each environment.
 
-1. Add in more agents to the DEVELOPMENT.AUTO.TFVARS file under `egress_policies`. This file is in `3-networks-dual-svpc/envs/development` directory.
+1. Add in more agents to the DEVELOPMENT.AUTO.TFVARS file under `egress_policies`. This file is in `gcp-networks/envs/development` directory.
 
    - "serviceAccount:bq-[prj-d-ml-machine-learning-project-number]@bigquery-encryption.iam.gserviceaccount.com"
 
@@ -1648,13 +1701,16 @@ For the next step, we need to update the non-production and production VPC-SC pe
       ]
    ```
 
-1. Once this addition has been done, it is necessary apply the changes for `3-networks-dual-svpc` for development environment:
+1. Once this addition has been done, it is necessary apply the changes for `gcp-networks` for development environment:
 
     ```bash
-      cd 3-networks-dual-svpc
+      cd gcp-networks
+      git checkout development
 
       ./tf-wrapper.sh init development
       ./tf-wrapper.sh plan development
+      git add .
+      git commit -m 'Update egress rules'
     ```
 
 
@@ -1734,19 +1790,19 @@ Also make sure to have a gcs bucket ready to store the artifacts for the tutoria
 1. In the next step, you can use the following commands to update the placeholders used in the file `census_pipeline.ipynb`. The commands below assume that you are in the new Git repository you created, on the development branch.
 
     ```bash
-      export prj_d_machine_learning_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/development" output -raw machine_learning_project_id)
+      export prj_d_machine_learning_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/gcp-projects/ml_business_unit/development" output -raw machine_learning_project_id)
       echo $prj_d_machine_learning_project_id
 
-      export prj_d_machine_learning_project_number=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/development" output -raw machine_learning_project_number)
+      export prj_d_machine_learning_project_number=$(terraform -chdir="../terraform-google-enterprise-genai/gcp-projects/ml_business_unit/development" output -raw machine_learning_project_number)
       echo $prj_d_machine_learning_project_number
 
-      export prj_d_shared_restricted_id=$(terraform -chdir="../terraform-google-enterprise-genai/3-networks-dual-svpc/envs/development" output -raw restricted_host_project_id)
+      export prj_d_shared_restricted_id=$(terraform -chdir="../terraform-google-enterprise-genai/gcp-networks/envs/development" output -raw restricted_host_project_id)
       echo $prj_d_shared_restricted_id
 
-      export prj_d_kms_id=$(terraform -chdir="../terraform-google-enterprise-genai/2-environments/envs/development" output -raw env_kms_project_id)
+      export prj_d_kms_id=$(terraform -chdir="../terraform-google-enterprise-genai/gcp-environments/envs/development" output -raw env_kms_project_id)
       echo $prj_d_kms_id
 
-      export common_artifacts_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared" output -raw common_artifacts_project_id)
+      export common_artifacts_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/gcp-projects/ml_business_unit/shared" output -raw common_artifacts_project_id)
       echo $common_artifacts_project_id
 
       export development_bucket_name=$(gcloud storage buckets list --project $prj_d_machine_learning_project_id --format="value(name)" |grep bkt)
@@ -2009,7 +2065,9 @@ After the notebook runs successfully and the pipeline's test run finishes in the
 
 1. You can use the command below to get the `NON-PROD_MACHINE_LEARNING_PROJECT_ID`.
     ```bash
-      export prj_n_machine_learning_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/non-production" output -raw machine_learning_project_id)
+    export directory="../gcp-projects/ml_business_unit/non-production"
+    (cd $directory && git checkout non-production)
+      export prj_n_machine_learning_project_id=$(terraform -chdir=$directory output -raw machine_learning_project_id)
       echo $prj_n_machine_learning_project_id
       echo "trigger-sa@"$prj_n_machine_learning_project_id".iam.gserviceaccount.com"
     ```
@@ -2025,19 +2083,25 @@ After the notebook runs successfully and the pipeline's test run finishes in the
     |Cloud Build configuration file location|cloudbuild.yaml (only if you chose Cloud Build configuration file)|
     |Service Account|trigger-sa@YOUR_NON-PROD_MACHINE_LEARNING_PROJECT_ID.iam.gserviceaccount.com|
 
-1. Execute the following commands to update the `cloudbuild.yaml` file. These commands assume that you are in the cloned Git repository and that you are on the development branch. The output will include placeholders that need to be replaced with values from `bucket-name` and `artifact-project`. You can find the template at `assets/Vertexpipeline/cloudbuild.yaml`.
+1. Use the commands below to get the data that will be used to update the `cloudbuild.yaml` file. These commands assume that you are in the cloned Git repository and that you are on the development branch. The output will include placeholders that need to be replaced with values from `bucket-name` and `artifact-project`. You can find the template at `assets/Vertexpipeline/cloudbuild.yaml`.
 
     ```bash
-    export prj_n_machine_learning_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/non-production" output -raw machine_learning_project_id)
+    export directory="../gcp-projects/ml_business_unit/non-production"
+    (cd $directory && git checkout non-production)
+    export prj_n_machine_learning_project_id=$(terraform -chdir=$directory output -raw machine_learning_project_id)
     echo $prj_n_machine_learning_project_id
 
     export non_prod_bucket_name=$(gsutil ls -p $prj_n_machine_learning_project_id | grep -o 'gs://bkt-n-ml[^/]*')
     non_prod_bucket_name=$(echo $non_prod_bucket_name | sed 's#gs://##')
     echo $non_prod_bucket_name
 
-    export common_artifacts_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared" output -raw common_artifacts_project_id)
+    export common_artifacts_project_id=$(terraform -chdir=$directory output -raw common_artifacts_project_id)
     echo $common_artifacts_project_id
+    ```
 
+1. Execute the following commands to update the `cloudbuild.yaml` file. These commands assume that you are in the cloned Git repository and that you are on the development branch.
+
+    ```bash
     sed -i\
         -e "s/{NON_PROD_BUCKET_NAME}/$non_prod_bucket_name/g" \
         -e "s/{COMMOM_ARTIFACTS_PRJ_ID}/$common_artifacts_project_id/g" \
@@ -2058,22 +2122,28 @@ After the notebook runs successfully and the pipeline's test run finishes in the
           id: 'upload dag'
     ```
 
-1. Execute the following commands to update the `runpipeline.py` file. These commands assume that you are in the same Git repository from previous step and in the development branch. The output will include placeholders that need to be replaced with values from the projects that were deployed. You can find the example template at `assets/Vertexpipeline/runpipeline.py`.
+1. Use the commands below to get the data that will be used to update the `runpipeline.py` file. These commands assume that you are in the same Git repository from previous step and in the development branch. The output will include placeholders that need to be replaced with values from the projects that were deployed. You can find the example template at `assets/Vertexpipeline/runpipeline.py`.
 
     ```bash
-    export common_artifacts_project_id=$(terraform -chdir=../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared output -raw common_artifacts_project_id)
+    export directory="../gcp-projects/ml_business_unit/shared"
+    (cd $directory && git checkout shared)
+    export common_artifacts_project_id=$(terraform -chdir=$directory output -raw common_artifacts_project_id)
     echo $common_artifacts_project_id
 
-    export prj_n_kms_id=$(terraform -chdir="../terraform-google-enterprise-genai/2-environments/envs/non-production" output -raw env_kms_project_id)
+    export directory="../gcp-environments/envs/non-production"
+    (cd $directory && git checkout non-production)
+    export prj_n_kms_id=$(terraform -chdir=$directory output -raw env_kms_project_id)
     echo $prj_n_kms_id
 
-    export prj_n_shared_restricted_id=$(terraform -chdir="../terraform-google-enterprise-genai/3-networks-dual-svpc/envs/non-production" output -raw restricted_host_project_id)
+    export prj_n_shared_restricted_id=$(terraform -chdir=$directory output -raw restricted_host_project_id)
     echo $prj_n_shared_restricted_id
 
-    export prj_n_machine_learning_project_number=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/non-production" output -raw machine_learning_project_number)
+    export directory="../gcp-projects/ml_business_unit/non-production"
+    (cd $directory && git checkout non-production)
+    export prj_n_machine_learning_project_number=$(terraform -chdir=$directory output -raw machine_learning_project_number)
     echo $prj_n_machine_learning_project_number
 
-    export prj_n_machine_learning_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/non-production" output -raw machine_learning_project_id)
+    export prj_n_machine_learning_project_id=$(terraform -chdir=$directory output -raw machine_learning_project_id)
     echo $prj_n_machine_learning_project_id
 
     export non_prod_bucket_name=$(gsutil ls -p $prj_n_machine_learning_project_id | grep -o 'gs://bkt-n-ml[^/]*')
@@ -2083,15 +2153,24 @@ After the notebook runs successfully and the pipeline's test run finishes in the
     export dataflow_sa="dataflow-sa@${prj_n_machine_learning_project_id}.iam.gserviceaccount.com"
     echo $dataflow_sa
 
-    export prj_p_machine_learning_project_number=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/production" output -raw machine_learning_project_number)
+    export directory="../gcp-projects/ml_business_unit/production"
+    (cd $directory && git checkout production)
+    export prj_p_machine_learning_project_number=$(terraform -chdir=$directory output -raw machine_learning_project_number)
     echo $prj_p_machine_learning_project_number
 
-    export prj_p_machine_learning_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/production" output -raw machine_learning_project_id)
+    export prj_p_machine_learning_project_id=$(terraform -chdir=$directory output -raw machine_learning_project_id)
     echo $prj_p_machine_learning_project_id
 
-    export prj_p_kms_id=$(terraform -chdir="../terraform-google-enterprise-genai/2-environments/envs/production" output -raw env_kms_project_id)
+    export directory="../gcp-environments/envs/production"
+    (cd $directory && git checkout production)
+    export prj_p_kms_id=$(terraform -chdir=$directory output -raw env_kms_project_id)
     echo $prj_p_kms_id
+    ```
 
+
+1. Execute the following commands to update the `runpipeline.py` file. These commands assume that you are in the same Git repository from previous step and in the development branch.
+
+    ```bash
     sed -i \
         -e "s/{PRJ_C_MLARTIFACTS_ID}/$common_artifacts_project_id/g" \
         -e "s/{PRJ_N_KMS_ID}/$prj_n_kms_id/g" \
@@ -2107,19 +2186,25 @@ After the notebook runs successfully and the pipeline's test run finishes in the
     ./runpipeline.py
     ```
 
-1. Execute the following commands to update the `compile_pipeline.py` file. These commands assume that you are in the same Git repository from previous step and in the development branch. The output will include placeholders that need to be replaced with values from the projects that were deployed. You can find the example template at `assets/Vertexpipeline/compile_pipeline.py`.
+1. Use the commands below to get the data that will be used to update the `compile_pipeline.py` file. These commands assume that you are in the same Git repository from previous step and in the development branch. The output will include placeholders that need to be replaced with values from the projects that were deployed. You can find the example template at `assets/Vertexpipeline/compile_pipeline.py`.
 
     ```bash
-    export common_artifacts_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/shared" output -raw common_artifacts_project_id)
+    export directory="../gcp-projects/ml_business_unit/shared"
+    (cd $directory && git checkout shared)
+    export common_artifacts_project_id=$(terraform -chdir=$directory output -raw common_artifacts_project_id)
     echo $common_artifacts_project_id
 
-    export prj_n_machine_learning_project_id=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/non-production" output -raw machine_learning_project_id)
+    export prj_n_machine_learning_project_id=$(terraform -chdir=$directory output -raw machine_learning_project_id)
     echo $prj_n_machine_learning_project_id
 
     export non_prod_bucket_name=$(gsutil ls -p $prj_n_machine_learning_project_id | grep -o 'gs://bkt-n-ml[^/]*')
     non_prod_bucket_name=$(echo $non_prod_bucket_name | sed 's#gs://##')
     echo $non_prod_bucket_name
+    ```
 
+1. Execute the following commands to update the `compile_pipeline.py` file. These commands assume that you are in the same Git repository from previous step and in the development branch.
+
+    ```bash
     sed -i \
         -e "s/{NON_PROD_BUCKET_NAME}/$non_prod_bucket_name/g" \
         -e "s/{COMMOM_ARTIFACTS_PRJ_ID}/$common_artifacts_project_id/g" \
@@ -2187,7 +2272,7 @@ Here are the instructions to make a request to your model using `gcloud` and `cu
 
 **Note 1:** If you are using MacOS, replace `cp -RT` with `cp -R` in the relevant commands. The `-T` flag is needed for Linux, but causes problems for MacOS.
 
-**Note 2:** If you are deploying using Local Terraform, you need to chant the output line to `3-networks-dual-svpc` instead of `gcp-projects`.
+**Note 2:** If you are deploying using Local Terraform, you need to change the output line to `gcp-networks` instead of `gcp-projects`.
 
 If you have chosen to deploy Composer with the Pipeline, you will need a github repository set up for this step. This repository houses the DAG's for composer. As of this writing, the structure is as follows:
 
@@ -2365,7 +2450,7 @@ This is  due to a VPC Service control error that until now, is impossible to add
   ]
   ```
 
-- We want the `unknown-project-number` here.  Add this into your `egress_policies` in `3-networks` under DEVELOPMENT.AUTO.TFVARS, NON-PRODUCTION.AUTO.TFVARS & PRODUCTION.AUTO.TFVARS
+- We want the `unknown-project-number` here.  Add this into your `egress_policies` in `gcp-networks` under DEVELOPMENT.AUTO.TFVARS, NON-PRODUCTION.AUTO.TFVARS & PRODUCTION.AUTO.TFVARS
 
   ```
   // Service Catalog
