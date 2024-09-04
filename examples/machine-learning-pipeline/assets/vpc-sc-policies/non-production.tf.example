@@ -69,6 +69,8 @@ egress_policies = [
       "identities" = [
         "serviceAccount:service-REPLACE_WITH_ENV_ML_PROJECT_NUMBER@gcp-sa-notebooks.iam.gserviceaccount.com",
         "serviceAccount:service-REPLACE_WITH_ENV_ML_PROJECT_NUMBER@compute-system.iam.gserviceaccount.com",
+        "serviceAccount:REPLACE_WITH_ENV_ML_PROJECT_NUMBER-compute@developer.gserviceaccount.com",
+        "serviceAccount:cloud-aiplatform-api-robot-prod@system.gserviceaccount.com",
       ]
     },
     "to" = {
@@ -78,6 +80,9 @@ egress_policies = [
           "methods" = ["*"]
         }
         "cloudkms.googleapis.com" = {
+          "methods" = ["*"]
+        }
+        "storage.googleapis.com" = {
           "methods" = ["*"]
         }
       }
