@@ -34,6 +34,7 @@ END_USER_CREDENTIAL=""
 ORGANIZATION_ID=""
 BILLING_ACCOUNT=""
 EXTERNAL_REPO="false"
+TERRAFORM_LOCAL="false"
 
 # Collect the errors
 ERRORS=""
@@ -229,6 +230,21 @@ function validate_bootstrap_step(){
     fi
 }
 
+# Checks if initial config was done for gcp-bootstrap step in Terraform Local deploy
+function validate_bootstrap_terraform_local(){
+    SCRIPTS_DIR="$( dirname -- "$0"; )"
+    FILE="$SCRIPTS_DIR/../../gcp-bootstrap/terraform.tfvars"
+    if [ ! -f "$FILE" ]; then
+        echo "  Rename the file gcp-bootstrap/terraform.example.tfvars to gcp-bootstrap/terraform.tfvars"
+        ERRORS+=$'  terraform.tfvars file must exist for gcp-bootstrap step.\n'
+    else
+        if [ "$(grep -c REPLACE_ME "$FILE")" != 0 ]; then
+            echo "  gcp-bootstrap/terraform.tfvars must have required values fulfilled."
+            ERRORS+=$'  terraform.tfvars file must be correctly fulfilled for gcp-bootstrap step.\n'
+        fi
+    fi
+}
+
 # Checks if initial config was done for 0-bootstrap step in Terraform Cloud deploy
 function validate_bootstrap_step_external_repo(){
     SCRIPTS_DIR="$( dirname -- "$0"; )"
@@ -305,9 +321,11 @@ function main(){
 
     echo "Validating 0-bootstrap configuration..."
     if [[ "$EXTERNAL_REPO" == "true" ]]; then
-        validate_bootstrap_step_external_repo
+    	validate_bootstrap_step_external_repo
+    elif [[ "$TERRAFORM_LOCAL" == "true" ]]; then
+    	validate_bootstrap_terraform_local	
     else
-        validate_bootstrap_step
+    	validate_bootstrap_step
     fi
 
     echo "......................................."
@@ -334,7 +352,7 @@ usage() {
 }
 
 # Check for input variables
-while getopts ":o:b:u:e" OPT; do
+while getopts ":o:b:u:e:t" OPT; do
   case ${OPT} in
     o )
       ORGANIZATION_ID=$OPTARG
@@ -347,6 +365,9 @@ while getopts ":o:b:u:e" OPT; do
       ;;
     e )
       EXTERNAL_REPO="true"
+      ;;
+    t )
+      TERRAFORM_LOCAL="true"
       ;;
     : )
       echo
