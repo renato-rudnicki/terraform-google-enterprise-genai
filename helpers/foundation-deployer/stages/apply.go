@@ -22,29 +22,32 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/mitchellh/go-testing-interface"
 
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/gcp"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/msg"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/steps"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/utils"
+	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/gcp"
+	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/msg"
+	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/steps"
+	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/utils"
 
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/test/integration/testutils"
+	"github.com/terraform-google-modules/terraform-example-foundation/test/integration/testutils"
 )
 
 func DeployBootstrapStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, c CommonConf) error {
 	bootstrapTfvars := BootstrapTfvars{
 		OrgID:                        tfvars.OrgID,
 		DefaultRegion:                tfvars.DefaultRegion,
+		DefaultRegion2:               tfvars.DefaultRegion2,
+		DefaultRegionGCS:             tfvars.DefaultRegionGCS,
+		DefaultRegionKMS:             tfvars.DefaultRegionKMS,
 		BillingAccount:               tfvars.BillingAccount,
-		GroupOrgAdmins:               tfvars.GroupOrgAdmins,
-		GroupBillingAdmins:           tfvars.GroupBillingAdmins,
-		OrgProjectCreators:           tfvars.OrgProjectCreators,
 		ParentFolder:                 tfvars.ParentFolder,
 		ProjectPrefix:                tfvars.ProjectPrefix,
 		FolderPrefix:                 tfvars.FolderPrefix,
 		BucketForceDestroy:           tfvars.BucketForceDestroy,
 		BucketTfstateKmsForceDestroy: tfvars.BucketTfstateKmsForceDestroy,
+		WorkflowDeletionProtection:   tfvars.WorkflowDeletionProtection,
 		Groups:                       tfvars.Groups,
 		InitialGroupConfig:           tfvars.InitialGroupConfig,
+		FolderDeletionProtection:     tfvars.FolderDeletionProtection,
+		ProjectDeletionPolicy:        tfvars.ProjectDeletionPolicy,
 	}
 
 	err := utils.WriteTfvars(filepath.Join(c.FoundationPath, BootstrapStep, "terraform.tfvars"), bootstrapTfvars)
@@ -196,43 +199,35 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 	orgTfvars := OrgTfvars{
 		DomainsToAllow:                        tfvars.DomainsToAllow,
 		EssentialContactsDomains:              tfvars.EssentialContactsDomains,
-		BillingDataUsers:                      tfvars.BillingDataUsers,
-		AuditDataUsers:                        tfvars.AuditDataUsers,
 		SccNotificationName:                   tfvars.SccNotificationName,
 		RemoteStateBucket:                     outputs.RemoteStateBucket,
 		EnableHubAndSpoke:                     tfvars.EnableHubAndSpoke,
 		CreateACMAPolicy:                      createACMAPolicy,
 		CreateUniqueTagKey:                    tfvars.CreateUniqueTagKey,
-		CaiMonitoringKmsForceDestroy:          tfvars.CaiMonitoringKmsForceDestroy,
 		AuditLogsTableDeleteContentsOnDestroy: tfvars.AuditLogsTableDeleteContentsOnDestroy,
 		LogExportStorageForceDestroy:          tfvars.LogExportStorageForceDestroy,
 		LogExportStorageLocation:              tfvars.LogExportStorageLocation,
 		BillingExportDatasetLocation:          tfvars.BillingExportDatasetLocation,
+		FolderDeletionProtection:              tfvars.FolderDeletionProtection,
+		ProjectDeletionPolicy:                 tfvars.ProjectDeletionPolicy,
 	}
-	if tfvars.HasGroupsCreation() {
-		orgTfvars.BillingDataUsers = (*tfvars.Groups).RequiredGroups.BillingDataUsers
-		orgTfvars.AuditDataUsers = (*tfvars.Groups).RequiredGroups.AuditDataUsers
-		orgTfvars.GcpGroups = GcpGroups{}
-		if *(*tfvars.Groups).OptionalGroups.GcpPlatformViewer != "" {
-			orgTfvars.GcpGroups.PlatformViewer = (*tfvars.Groups).OptionalGroups.GcpPlatformViewer
+	orgTfvars.GcpGroups = GcpGroups{}
+	if tfvars.HasOptionalGroupsCreation() {
+		if (*tfvars.Groups.OptionalGroups.GcpSecurityReviewer) != "" {
+			orgTfvars.GcpGroups.SecurityReviewer = tfvars.Groups.OptionalGroups.GcpSecurityReviewer
 		}
-		if *(*tfvars.Groups).OptionalGroups.GcpSecurityReviewer != "" {
-			orgTfvars.GcpGroups.SecurityReviewer = (*tfvars.Groups).OptionalGroups.GcpSecurityReviewer
+		if (*tfvars.Groups.OptionalGroups.GcpNetworkViewer) != "" {
+			orgTfvars.GcpGroups.NetworkViewer = tfvars.Groups.OptionalGroups.GcpNetworkViewer
 		}
-		if *(*tfvars.Groups).OptionalGroups.GcpNetworkViewer != "" {
-			orgTfvars.GcpGroups.NetworkViewer = (*tfvars.Groups).OptionalGroups.GcpNetworkViewer
+		if (*tfvars.Groups.OptionalGroups.GcpSccAdmin) != "" {
+			orgTfvars.GcpGroups.SccAdmin = tfvars.Groups.OptionalGroups.GcpSccAdmin
 		}
-		if *(*tfvars.Groups).OptionalGroups.GcpSccAdmin != "" {
-			orgTfvars.GcpGroups.SccAdmin = (*tfvars.Groups).OptionalGroups.GcpSccAdmin
+		if (*tfvars.Groups.OptionalGroups.GcpGlobalSecretsAdmin) != "" {
+			orgTfvars.GcpGroups.GlobalSecretsAdmin = tfvars.Groups.OptionalGroups.GcpGlobalSecretsAdmin
 		}
-		if *(*tfvars.Groups).OptionalGroups.GcpGlobalSecretsAdmin != "" {
-			orgTfvars.GcpGroups.GlobalSecretsAdmin = (*tfvars.Groups).OptionalGroups.GcpGlobalSecretsAdmin
+		if (*tfvars.Groups.OptionalGroups.GcpKmsAdmin) != "" {
+			orgTfvars.GcpGroups.KmsAdmin = tfvars.Groups.OptionalGroups.GcpKmsAdmin
 		}
-		if *(*tfvars.Groups).OptionalGroups.GcpAuditViewer != "" {
-			orgTfvars.GcpGroups.AuditViewer = (*tfvars.Groups).OptionalGroups.GcpAuditViewer
-		}
-	} else {
-		orgTfvars.GcpGroups = GcpGroups{}
 	}
 
 	err := utils.WriteTfvars(filepath.Join(c.FoundationPath, OrgStep, "envs", "shared", "terraform.tfvars"), orgTfvars)
@@ -257,11 +252,9 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs BootstrapOutputs, c CommonConf) error {
 
 	envsTfvars := EnvsTfvars{
-		MonitoringWorkspaceUsers: tfvars.MonitoringWorkspaceUsers,
 		RemoteStateBucket:        outputs.RemoteStateBucket,
-	}
-	if tfvars.HasGroupsCreation() {
-		envsTfvars.MonitoringWorkspaceUsers = (*tfvars.Groups).RequiredGroups.MonitoringWorkspaceUsers
+		FolderDeletionProtection: tfvars.FolderDeletionProtection,
+		ProjectDeletionPolicy:    tfvars.ProjectDeletionPolicy,
 	}
 	err := utils.WriteTfvars(filepath.Join(c.FoundationPath, EnvironmentsStep, "terraform.tfvars"), envsTfvars)
 	if err != nil {
@@ -276,7 +269,7 @@ func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		Step:          EnvironmentsStep,
 		Repo:          EnvironmentsRepo,
 		GitConf:       conf,
-		Envs:          []string{"production", "non-production", "development"},
+		Envs:          []string{"production", "nonproduction", "development"},
 	}
 
 	return deployStage(t, stageConf, s, c)
@@ -286,11 +279,27 @@ func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 
 	step := GetNetworkStep(c.EnableHubAndSpoke)
 
+	var localStep []string
+
+	if c.EnableHubAndSpoke {
+		localStep = []string{"shared"}
+	} else {
+		localStep = []string{"shared", "production"}
+	}
+
 	// shared
 	sharedTfvars := NetSharedTfvars{
 		TargetNameServerAddresses: tfvars.TargetNameServerAddresses,
 	}
 	err := utils.WriteTfvars(filepath.Join(c.FoundationPath, step, "shared.auto.tfvars"), sharedTfvars)
+	if err != nil {
+		return err
+	}
+	// production
+	productionTfvars := NetProductionTfvars{
+		TargetNameServerAddresses: tfvars.TargetNameServerAddresses,
+	}
+	err = utils.WriteTfvars(filepath.Join(c.FoundationPath, step, "production.auto.tfvars"), productionTfvars)
 	if err != nil {
 		return err
 	}
@@ -325,15 +334,16 @@ func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		Step:          step,
 		Repo:          NetworksRepo,
 		GitConf:       conf,
-		HasManualStep: true,
+		HasLocalStep:  true,
+		LocalSteps:    localStep,
 		GroupingUnits: []string{"envs"},
-		Envs:          []string{"production", "non-production", "development"},
+		Envs:          []string{"production", "nonproduction", "development"},
 	}
-
 	return deployStage(t, stageConf, s, c)
 }
 
 func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs BootstrapOutputs, c CommonConf) error {
+
 	// shared
 	sharedTfvars := ProjSharedTfvars{
 		DefaultRegion: tfvars.DefaultRegion,
@@ -352,12 +362,14 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 	}
 	//for each environment
 	envTfvars := ProjEnvTfvars{
-		ProjectsKMSLocation: tfvars.ProjectsKMSLocation,
-		ProjectsGCSLocation: tfvars.ProjectsGCSLocation,
+		LocationKMS:              tfvars.LocationKMS,
+		LocationGCS:              tfvars.LocationGCS,
+		FolderDeletionProtection: tfvars.FolderDeletionProtection,
+		ProjectDeletionPolicy:    tfvars.ProjectDeletionPolicy,
 	}
 	for _, envfile := range []string{
 		"development.auto.tfvars",
-		"non-production.auto.tfvars",
+		"nonproduction.auto.tfvars",
 		"production.auto.tfvars"} {
 		err = utils.WriteTfvars(filepath.Join(c.FoundationPath, ProjectsStep, envfile), envTfvars)
 		if err != nil {
@@ -374,9 +386,10 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		Step:          ProjectsStep,
 		Repo:          ProjectsRepo,
 		GitConf:       conf,
-		HasManualStep: true,
-		GroupingUnits: []string{"business_unit_1", "business_unit_2"},
-		Envs:          []string{"production", "non-production", "development"},
+		HasLocalStep:  true,
+		LocalSteps:    []string{"shared"},
+		GroupingUnits: []string{"business_unit_1"},
+		Envs:          []string{"production", "nonproduction", "development"},
 	}
 
 	return deployStage(t, stageConf, s, c)
@@ -394,7 +407,7 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, out
 		return err
 	}
 	// update backend bucket
-	for _, e := range []string{"production", "non-production", "development"} {
+	for _, e := range []string{"production", "nonproduction", "development"} {
 		err = utils.ReplaceStringInFile(filepath.Join(c.FoundationPath, AppInfraStep, "business_unit_1", e, "backend.tf"), "UPDATE_APP_INFRA_BUCKET", outputs.StateBucket)
 		if err != nil {
 			return err
@@ -419,7 +432,7 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, out
 		Step:          AppInfraStep,
 		Repo:          AppInfraRepo,
 		GitConf:       conf,
-		Envs:          []string{"production", "non-production", "development"},
+		Envs:          []string{"production", "nonproduction", "development"},
 	}
 
 	return deployStage(t, stageConf, s, c)
@@ -439,22 +452,25 @@ func deployStage(t testing.TB, sc StageConf, s steps.Steps, c CommonConf) error 
 		return err
 	}
 
-	shared := []string{}
-	if sc.HasManualStep {
-		shared = sc.GroupingUnits
+	groupunit := []string{}
+	if sc.HasLocalStep {
+		groupunit = sc.GroupingUnits
 	}
-	for _, bu := range shared {
-		buOptions := &terraform.Options{
-			TerraformDir: filepath.Join(filepath.Join(c.CheckoutPath, sc.Repo), bu, "shared"),
-			Logger:       c.Logger,
-			NoColor:      true,
-		}
 
-		err := s.RunStep(fmt.Sprintf("%s.%s.apply-shared", sc.Stage, bu), func() error {
-			return applyLocal(t, buOptions, sc.StageSA, c.PolicyPath, c.ValidatorProject)
-		})
-		if err != nil {
-			return err
+	for _, bu := range groupunit {
+		for _, localStep := range sc.LocalSteps {
+			buOptions := &terraform.Options{
+				TerraformDir: filepath.Join(filepath.Join(c.CheckoutPath, sc.Repo), bu, localStep),
+				Logger:       c.Logger,
+				NoColor:      true,
+			}
+
+			err := s.RunStep(fmt.Sprintf("%s.%s.apply-%s", sc.Stage, bu, localStep), func() error {
+				return applyLocal(t, buOptions, sc.StageSA, c.PolicyPath, c.ValidatorProject)
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -520,6 +536,7 @@ func copyStepCode(t testing.TB, conf utils.GitRepo, foundationPath, checkoutPath
 }
 
 func planStage(t testing.TB, conf utils.GitRepo, project, region, repo string) error {
+
 	err := conf.CommitFiles(fmt.Sprintf("Initialize %s repo", repo))
 	if err != nil {
 		return err

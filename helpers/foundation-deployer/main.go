@@ -25,11 +25,11 @@ import (
 
 	"github.com/mitchellh/go-testing-interface"
 
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/gcp"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/msg"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/stages"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/steps"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/utils"
+	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/gcp"
+	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/msg"
+	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/stages"
+	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/steps"
+	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/utils"
 )
 
 var (
@@ -56,7 +56,7 @@ func parseFlags() cfg {
 
 	flag.StringVar(&c.tfvarsFile, "tfvars_file", "", "Full path to the Terraform .tfvars `file` with the configuration to be used.")
 	flag.StringVar(&c.stepsFile, "steps_file", ".steps.json", "Path to the steps `file` to be used to save progress.")
-	flag.StringVar(&c.resetStep, "reset_step", "", "Name of a `step` to be reset.")
+	flag.StringVar(&c.resetStep, "reset_step", "", "Name of a `step` to be reset. The step will be marked as pending.")
 	flag.BoolVar(&c.quiet, "quiet", false, "If true, additional output is suppressed.")
 	flag.BoolVar(&c.help, "help", false, "Prints this help text and exits.")
 	flag.BoolVar(&c.listSteps, "list_steps", false, "List the existing steps.")
