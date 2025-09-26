@@ -24,7 +24,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/mitchellh/go-testing-interface"
 
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/utils"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/utils"
 )
 
 const (
@@ -45,7 +45,7 @@ const (
 )
 
 type CommonConf struct {
-	FoundationPath    string
+	GenaiPath         string
 	CheckoutPath      string
 	PolicyPath        string
 	ValidatorProject  string
@@ -63,17 +63,11 @@ type StageConf struct {
 	Repo                string
 	CustomTargetDirPath string
 	GitConf             utils.GitRepo
-	HasManualStep       bool
+	HasLocalStep        bool
 	GroupingUnits       []string
 	Envs                []string
+	LocalSteps          []string
 }
-
-// type GcpGroup struct {
-// 	Id string
-// }
-// type RequiredGroups struct {
-// 	map[string]GcpGroup
-// }
 
 type BootstrapOutputs struct {
 	RemoteStateBucket         string
@@ -85,6 +79,7 @@ type BootstrapOutputs struct {
 	EnvsSA                    string
 	OrgSA                     string
 	BootstrapSA               string
+	RequiredGroups            map[string]string
 }
 
 type InfraPipelineOutputs struct {
@@ -102,11 +97,10 @@ type ServerAddress struct {
 }
 
 type RequiredGroups struct {
-	GroupOrgAdmins           string `cty:"group_org_admins"`
-	GroupBillingAdmins       string `cty:"group_billing_admins"`
-	BillingDataUsers         string `cty:"billing_data_users"`
-	AuditDataUsers           string `cty:"audit_data_users"`
-	MonitoringWorkspaceUsers string `cty:"monitoring_workspace_users"`
+	GroupOrgAdmins     string `cty:"group_org_admins"`
+	GroupBillingAdmins string `cty:"group_billing_admins"`
+	BillingDataUsers   string `cty:"billing_data_users"`
+	AuditDataUsers     string `cty:"audit_data_users"`
 }
 
 type OptionalGroups struct {
@@ -119,34 +113,30 @@ type OptionalGroups struct {
 }
 
 type Groups struct {
-	CreateGroups   bool           `cty:"create_groups"`
-	BillingProject string         `cty:"billing_project"`
-	RequiredGroups RequiredGroups `cty:"required_groups"`
-	OptionalGroups OptionalGroups `cty:"optional_groups"`
+	CreateRequiredGroups *bool           `cty:"create_required_groups"`
+	CreateOptionalGroups *bool           `cty:"create_optional_groups"`
+	CreateGroups         bool            `cty:"create_groups"`
+	BillingProject       *string         `cty:"billing_project"`
+	RequiredGroups       RequiredGroups  `cty:"required_groups"`
+	OptionalGroups       *OptionalGroups `cty:"optional_groups"`
 }
 
 type GcpGroups struct {
-	PlatformViewer     *string `cty:"platform_viewer"`
 	SecurityReviewer   *string `cty:"security_reviewer"`
 	NetworkViewer      *string `cty:"network_viewer"`
 	SccAdmin           *string `cty:"scc_admin"`
 	GlobalSecretsAdmin *string `cty:"global_secrets_admin"`
-	AuditViewer        *string `cty:"audit_viewer"`
+	KmsAdmin           *string `cty:"kms_admin"`
 }
 
 // GlobalTFVars contains all the configuration for the deploy
 type GlobalTFVars struct {
 	OrgID                                 string          `hcl:"org_id"`
 	BillingAccount                        string          `hcl:"billing_account"`
-	GroupOrgAdmins                        string          `hcl:"group_org_admins"`
-	GroupBillingAdmins                    string          `hcl:"group_billing_admins"`
-	BillingDataUsers                      string          `hcl:"billing_data_users"`
-	MonitoringWorkspaceUsers              string          `hcl:"monitoring_workspace_users"`
-	AuditDataUsers                        string          `hcl:"audit_data_users"`
-	OrgProjectCreators                    []string        `hcl:"org_project_creators"`
 	DefaultRegion                         string          `hcl:"default_region"`
 	ParentFolder                          *string         `hcl:"parent_folder"`
 	Domain                                string          `hcl:"domain"`
+	MonitoringWorkspaceUsers              string          `hcl:"monitoring_workspace_users"`
 	DomainsToAllow                        []string        `hcl:"domains_to_allow"`
 	EssentialContactsDomains              []string        `hcl:"essential_contacts_domains_to_allow"`
 	PerimeterAdditionalMembers            []string        `hcl:"perimeter_additional_members"`
@@ -154,23 +144,28 @@ type GlobalTFVars struct {
 	SccNotificationName                   string          `hcl:"scc_notification_name"`
 	ProjectPrefix                         *string         `hcl:"project_prefix"`
 	FolderPrefix                          *string         `hcl:"folder_prefix"`
+	OrgProjectCreators                    []string        `hcl:"org_project_creators"`
 	CaiMonitoringKmsForceDestroy          *bool           `hcl:"cai_monitoring_kms_force_destroy"`
 	BucketForceDestroy                    *bool           `hcl:"bucket_force_destroy"`
 	BucketTfstateKmsForceDestroy          *bool           `hcl:"bucket_tfstate_kms_force_destroy"`
 	AuditLogsTableDeleteContentsOnDestroy *bool           `hcl:"audit_logs_table_delete_contents_on_destroy"`
+	EnableSccResourcesInTerraform         *bool           `hcl:"enable_scc_resources_in_terraform"`
 	LogExportStorageForceDestroy          *bool           `hcl:"log_export_storage_force_destroy"`
 	LogExportStorageLocation              string          `hcl:"log_export_storage_location"`
 	BillingExportDatasetLocation          string          `hcl:"billing_export_dataset_location"`
 	EnableHubAndSpoke                     bool            `hcl:"enable_hub_and_spoke"`
 	EnableHubAndSpokeTransitivity         bool            `hcl:"enable_hub_and_spoke_transitivity"`
 	CreateUniqueTagKey                    bool            `hcl:"create_unique_tag_key"`
-	ProjectsKMSLocation                   string          `hcl:"projects_kms_location"`
-	ProjectsGCSLocation                   string          `hcl:"projects_gcs_location"`
+	LocationKMS                           string          `hcl:"location_kms"`
+	LocationGCS                           string          `hcl:"location_gcs"`
 	CodeCheckoutPath                      string          `hcl:"code_checkout_path"`
-	FoundationCodePath                    string          `hcl:"foundation_code_path"`
+	GenaiCodePath                         string          `hcl:"genai_code_path"`
 	ValidatorProjectId                    *string         `hcl:"validator_project_id"`
-	Groups                                *Groups         `hcl:"groups"`
+	Groups                                Groups          `hcl:"groups"`
 	InitialGroupConfig                    *string         `hcl:"initial_group_config"`
+	FolderDeletionProtection              *bool           `hcl:"folder_deletion_protection"`
+	ServiceCatalogRepo                    string          `hcl:"cloud_source_service_catalog_repo_name"`
+	ArtifactsRepoName                     string          `hcl:"cloud_source_artifacts_repo_name"`
 }
 
 // HasValidatorProj checks if a Validator Project was provided
@@ -178,9 +173,18 @@ func (g GlobalTFVars) HasValidatorProj() bool {
 	return g.ValidatorProjectId != nil && *g.ValidatorProjectId != "" && *g.ValidatorProjectId != "EXISTING_PROJECT_ID"
 }
 
-// HasGroupsCreation checks if Groups creation is enabled
 func (g GlobalTFVars) HasGroupsCreation() bool {
-	return g.Groups != nil && (*g.Groups).CreateGroups
+	return g.HasRequiredGroupsCreation() || g.HasOptionalGroupsCreation()
+}
+
+// HasRequiredGroupsCreation checks if Required Groups creation is enabled
+func (g GlobalTFVars) HasRequiredGroupsCreation() bool {
+	return (*g.Groups.CreateRequiredGroups)
+}
+
+// HasOptionalGroupsCreation checks if Optional Groups creation is enabled
+func (g GlobalTFVars) HasOptionalGroupsCreation() bool {
+	return (*g.Groups.CreateOptionalGroups)
 }
 
 // CheckString checks if any of the string fields in the GlobalTFVars has the given string
@@ -194,26 +198,22 @@ func (g GlobalTFVars) CheckString(s string) {
 }
 
 type BootstrapTfvars struct {
-	OrgID                        string   `hcl:"org_id"`
-	BillingAccount               string   `hcl:"billing_account"`
-	GroupOrgAdmins               string   `hcl:"group_org_admins"`
-	GroupBillingAdmins           string   `hcl:"group_billing_admins"`
-	DefaultRegion                string   `hcl:"default_region"`
-	ParentFolder                 *string  `hcl:"parent_folder"`
-	ProjectPrefix                *string  `hcl:"project_prefix"`
-	FolderPrefix                 *string  `hcl:"folder_prefix"`
-	BucketForceDestroy           *bool    `hcl:"bucket_force_destroy"`
-	BucketTfstateKmsForceDestroy *bool    `hcl:"bucket_tfstate_kms_force_destroy"`
-	OrgProjectCreators           []string `hcl:"org_project_creators"`
-	Groups                       *Groups  `hcl:"groups"`
-	InitialGroupConfig           *string  `hcl:"initial_group_config"`
+	OrgID                        string  `hcl:"org_id"`
+	BillingAccount               string  `hcl:"billing_account"`
+	DefaultRegion                string  `hcl:"default_region"`
+	ParentFolder                 *string `hcl:"parent_folder"`
+	ProjectPrefix                *string `hcl:"project_prefix"`
+	FolderPrefix                 *string `hcl:"folder_prefix"`
+	BucketForceDestroy           *bool   `hcl:"bucket_force_destroy"`
+	BucketTfstateKmsForceDestroy *bool   `hcl:"bucket_tfstate_kms_force_destroy"`
+	Groups                       Groups  `hcl:"groups"`
+	InitialGroupConfig           *string `hcl:"initial_group_config"`
+	FolderDeletionProtection     *bool   `hcl:"folder_deletion_protection"`
 }
 
 type OrgTfvars struct {
 	DomainsToAllow                        []string  `hcl:"domains_to_allow"`
 	EssentialContactsDomains              []string  `hcl:"essential_contacts_domains_to_allow"`
-	BillingDataUsers                      string    `hcl:"billing_data_users"`
-	AuditDataUsers                        string    `hcl:"audit_data_users"`
 	SccNotificationName                   string    `hcl:"scc_notification_name"`
 	RemoteStateBucket                     string    `hcl:"remote_state_bucket"`
 	EnableHubAndSpoke                     bool      `hcl:"enable_hub_and_spoke"`
@@ -221,15 +221,18 @@ type OrgTfvars struct {
 	CreateUniqueTagKey                    bool      `hcl:"create_unique_tag_key"`
 	CaiMonitoringKmsForceDestroy          *bool     `hcl:"cai_monitoring_kms_force_destroy"`
 	AuditLogsTableDeleteContentsOnDestroy *bool     `hcl:"audit_logs_table_delete_contents_on_destroy"`
+	EnableSccResourcesInTerraform         *bool     `hcl:"enable_scc_resources_in_terraform"`
 	LogExportStorageForceDestroy          *bool     `hcl:"log_export_storage_force_destroy"`
 	LogExportStorageLocation              string    `hcl:"log_export_storage_location"`
 	BillingExportDatasetLocation          string    `hcl:"billing_export_dataset_location"`
 	GcpGroups                             GcpGroups `hcl:"gcp_groups"`
+	FolderDeletionProtection              *bool     `hcl:"folder_deletion_protection"`
 }
 
 type EnvsTfvars struct {
-	MonitoringWorkspaceUsers string `hcl:"monitoring_workspace_users"`
 	RemoteStateBucket        string `hcl:"remote_state_bucket"`
+	FolderDeletionProtection *bool  `hcl:"folder_deletion_protection"`
+	MonitoringWorkspaceUsers string `hcl:"monitoring_workspace_users"`
 }
 
 type NetCommonTfvars struct {
@@ -243,6 +246,10 @@ type NetSharedTfvars struct {
 	TargetNameServerAddresses []ServerAddress `hcl:"target_name_server_addresses"`
 }
 
+type NetProductionTfvars struct {
+	TargetNameServerAddresses []ServerAddress `hcl:"target_name_server_addresses"`
+}
+
 type NetAccessContextTfvars struct {
 	AccessContextManagerPolicyID string `hcl:"access_context_manager_policy_id"`
 }
@@ -252,12 +259,15 @@ type ProjCommonTfvars struct {
 }
 
 type ProjSharedTfvars struct {
-	DefaultRegion string `hcl:"default_region"`
+	DefaultRegion      string `hcl:"default_region"`
+	ServiceCatalogRepo string `hcl:"cloud_source_service_catalog_repo_name"`
+	ArtifactsRepoName  string `hcl:"cloud_source_artifacts_repo_name"`
 }
 
 type ProjEnvTfvars struct {
-	ProjectsKMSLocation string `hcl:"projects_kms_location"`
-	ProjectsGCSLocation string `hcl:"projects_gcs_location"`
+	LocationKMS              string `hcl:"location_kms"`
+	LocationGCS              string `hcl:"location_gcs"`
+	FolderDeletionProtection *bool  `hcl:"folder_deletion_protection"`
 }
 
 type AppInfraCommonTfvars struct {
@@ -265,9 +275,9 @@ type AppInfraCommonTfvars struct {
 	RemoteStateBucket string `hcl:"remote_state_bucket"`
 }
 
-func GetBootstrapStepOutputs(t testing.TB, foundationPath string) BootstrapOutputs {
+func GetBootstrapStepOutputs(t testing.TB, genaiPath string) BootstrapOutputs {
 	options := &terraform.Options{
-		TerraformDir: filepath.Join(foundationPath, "0-bootstrap"),
+		TerraformDir: filepath.Join(genaiPath, "0-bootstrap"),
 		Logger:       logger.Discard,
 		NoColor:      true,
 	}
@@ -281,12 +291,13 @@ func GetBootstrapStepOutputs(t testing.TB, foundationPath string) BootstrapOutpu
 		EnvsSA:                    terraform.Output(t, options, "environment_step_terraform_service_account_email"),
 		OrgSA:                     terraform.Output(t, options, "organization_step_terraform_service_account_email"),
 		BootstrapSA:               terraform.Output(t, options, "bootstrap_step_terraform_service_account_email"),
+		RequiredGroups:            terraform.OutputMap(t, options, "required_groups"),
 	}
 }
 
 func GetInfraPipelineOutputs(t testing.TB, checkoutPath, workspace string) InfraPipelineOutputs {
 	options := &terraform.Options{
-		TerraformDir: filepath.Join(checkoutPath, "gcp-projects", "business_unit_1", "shared"),
+		TerraformDir: filepath.Join(checkoutPath, "gcp-projects", "ml_business_unit", "shared"),
 		Logger:       logger.Discard,
 		NoColor:      true,
 	}
@@ -302,7 +313,7 @@ func GetInfraPipelineOutputs(t testing.TB, checkoutPath, workspace string) Infra
 func ReadGlobalTFVars(file string) (GlobalTFVars, error) {
 	var globalTfvars GlobalTFVars
 	if file == "" {
-		return globalTfvars, fmt.Errorf("tfvars file is required.")
+		return globalTfvars, fmt.Errorf("tfvars file is required")
 	}
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
@@ -316,8 +327,5 @@ func ReadGlobalTFVars(file string) (GlobalTFVars, error) {
 }
 
 func GetNetworkStep(enableHubAndSpoke bool) string {
-	if enableHubAndSpoke {
-		return HubAndSpokeStep
-	}
 	return DualSvpcStep
 }

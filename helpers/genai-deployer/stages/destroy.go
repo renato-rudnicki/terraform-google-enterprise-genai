@@ -23,9 +23,9 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/mitchellh/go-testing-interface"
 
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/steps"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/utils"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/test/integration/testutils"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/steps"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/utils"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration/testutils"
 )
 
 const (
@@ -107,7 +107,7 @@ func DestroyEnvStage(t testing.TB, s steps.Steps, outputs BootstrapOutputs, c Co
 		Step:          EnvironmentsStep,
 		Repo:          EnvironmentsRepo,
 		GroupingUnits: []string{"envs"},
-		Envs:          []string{"development", "non-production", "production"},
+		Envs:          []string{"development", "nonproduction", "production"},
 	}
 	return destroyStage(t, stageConf, s, c)
 }
@@ -120,9 +120,9 @@ func DestroyNetworksStage(t testing.TB, s steps.Steps, outputs BootstrapOutputs,
 		CICDProject:   outputs.CICDProject,
 		Step:          step,
 		Repo:          NetworksRepo,
-		HasManualStep: true,
+		HasLocalStep:  true,
 		GroupingUnits: []string{"envs"},
-		Envs:          []string{"development", "non-production", "production"},
+		Envs:          []string{"development", "nonproduction", "production"},
 	}
 	return destroyStage(t, stageConf, s, c)
 }
@@ -134,9 +134,9 @@ func DestroyProjectsStage(t testing.TB, s steps.Steps, outputs BootstrapOutputs,
 		CICDProject:   outputs.CICDProject,
 		Step:          ProjectsStep,
 		Repo:          ProjectsRepo,
-		HasManualStep: true,
-		GroupingUnits: []string{"business_unit_1", "business_unit_2"},
-		Envs:          []string{"development", "non-production", "production"},
+		HasLocalStep:  true,
+		GroupingUnits: []string{"ml_business_unit"},
+		Envs:          []string{"development", "nonproduction", "production"},
 	}
 	return destroyStage(t, stageConf, s, c)
 }
@@ -148,8 +148,8 @@ func DestroyExampleAppStage(t testing.TB, s steps.Steps, outputs InfraPipelineOu
 		CICDProject:   outputs.InfraPipeProj,
 		Step:          AppInfraStep,
 		Repo:          AppInfraRepo,
-		GroupingUnits: []string{"business_unit_1"},
-		Envs:          []string{"development", "non-production", "production"},
+		GroupingUnits: []string{"ml_business_unit"},
+		Envs:          []string{"development", "nonproduction", "production"},
 	}
 	return destroyStage(t, stageConf, s, c)
 }
@@ -188,7 +188,7 @@ func destroyStage(t testing.TB, sc StageConf, s steps.Steps, c CommonConf) error
 		}
 	}
 	groupingUnits := []string{}
-	if sc.HasManualStep {
+	if sc.HasLocalStep {
 		groupingUnits = sc.GroupingUnits
 	}
 	for _, g := range groupingUnits {

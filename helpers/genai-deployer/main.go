@@ -25,11 +25,11 @@ import (
 
 	"github.com/mitchellh/go-testing-interface"
 
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/gcp"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/msg"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/stages"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/steps"
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/helpers/foundation-deployer/utils"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/gcp"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/msg"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/stages"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/steps"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/utils"
 )
 
 var (
@@ -56,7 +56,7 @@ func parseFlags() cfg {
 
 	flag.StringVar(&c.tfvarsFile, "tfvars_file", "", "Full path to the Terraform .tfvars `file` with the configuration to be used.")
 	flag.StringVar(&c.stepsFile, "steps_file", ".steps.json", "Path to the steps `file` to be used to save progress.")
-	flag.StringVar(&c.resetStep, "reset_step", "", "Name of a `step` to be reset.")
+	flag.StringVar(&c.resetStep, "reset_step", "", "Name of a `step` to be reset. The step will be marked as pending.")
 	flag.BoolVar(&c.quiet, "quiet", false, "If true, additional output is suppressed.")
 	flag.BoolVar(&c.help, "help", false, "Prints this help text and exits.")
 	flag.BoolVar(&c.listSteps, "list_steps", false, "List the existing steps.")
@@ -72,7 +72,7 @@ func main() {
 
 	cfg := parseFlags()
 	if cfg.help {
-		fmt.Println("Deploys the Terraform Example Foundation")
+		fmt.Println("Deploys the Terraform Google Enterprise Genai")
 		flag.PrintDefaults()
 		return
 	}
@@ -95,9 +95,9 @@ func main() {
 	gotest.Init()
 	t := &testing.RuntimeT{}
 	conf := stages.CommonConf{
-		FoundationPath:    globalTFVars.FoundationCodePath,
+		GenaiPath:         globalTFVars.GenaiCodePath,
 		CheckoutPath:      globalTFVars.CodeCheckoutPath,
-		PolicyPath:        filepath.Join(globalTFVars.FoundationCodePath, "policy-library"),
+		PolicyPath:        filepath.Join(globalTFVars.GenaiCodePath, "policy-library"),
 		EnableHubAndSpoke: globalTFVars.EnableHubAndSpoke,
 		DisablePrompt:     cfg.disablePrompt,
 		Logger:            utils.GetLogger(cfg.quiet),
@@ -175,7 +175,7 @@ func main() {
 		// 4-projects
 		msg.PrintStageMsg("Destroying 4-projects stage")
 		err = s.RunDestroyStep("gcp-projects", func() error {
-			bo := stages.GetBootstrapStepOutputs(t, conf.FoundationPath)
+			bo := stages.GetBootstrapStepOutputs(t, conf.GenaiPath)
 			return stages.DestroyProjectsStage(t, s, bo, conf)
 		})
 		if err != nil {
@@ -186,7 +186,7 @@ func main() {
 		// 3-networks
 		msg.PrintStageMsg("Destroying 3-networks stage")
 		err = s.RunDestroyStep("gcp-networks", func() error {
-			bo := stages.GetBootstrapStepOutputs(t, conf.FoundationPath)
+			bo := stages.GetBootstrapStepOutputs(t, conf.GenaiPath)
 			return stages.DestroyNetworksStage(t, s, bo, conf)
 		})
 		if err != nil {
@@ -197,7 +197,7 @@ func main() {
 		// 2-environments
 		msg.PrintStageMsg("Destroying 2-environments stage")
 		err = s.RunDestroyStep("gcp-environments", func() error {
-			bo := stages.GetBootstrapStepOutputs(t, conf.FoundationPath)
+			bo := stages.GetBootstrapStepOutputs(t, conf.GenaiPath)
 			return stages.DestroyEnvStage(t, s, bo, conf)
 		})
 		if err != nil {
@@ -208,7 +208,7 @@ func main() {
 		// 1-org
 		msg.PrintStageMsg("Destroying 1-org stage")
 		err = s.RunDestroyStep("gcp-org", func() error {
-			bo := stages.GetBootstrapStepOutputs(t, conf.FoundationPath)
+			bo := stages.GetBootstrapStepOutputs(t, conf.GenaiPath)
 			return stages.DestroyOrgStage(t, s, bo, conf)
 		})
 		if err != nil {
@@ -248,7 +248,7 @@ func main() {
 		os.Exit(3)
 	}
 
-	bo := stages.GetBootstrapStepOutputs(t, conf.FoundationPath)
+	bo := stages.GetBootstrapStepOutputs(t, conf.GenaiPath)
 
 	if skipInnerBuildMsg {
 		msg.PrintBuildMsg(bo.CICDProject, bo.DefaultRegion, conf.DisablePrompt)
