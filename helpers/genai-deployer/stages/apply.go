@@ -192,7 +192,8 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 	createACMAPolicy := testutils.GetOrgACMPolicyID(t, tfvars.OrgID) == ""
 
 	orgTfvars := OrgTfvars{
-		DomainsToAllow:                        tfvars.DomainsToAllow,
+		DomainsToAllow: tfvars.DomainsToAllow,
+		//BillingDataUsers:                      tfvars.BillingDataUsers,
 		EssentialContactsDomains:              tfvars.EssentialContactsDomains,
 		SccNotificationName:                   tfvars.SccNotificationName,
 		RemoteStateBucket:                     outputs.RemoteStateBucket,
@@ -206,8 +207,10 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		BillingExportDatasetLocation:          tfvars.BillingExportDatasetLocation,
 		FolderDeletionProtection:              tfvars.FolderDeletionProtection,
 	}
-	orgTfvars.GcpGroups = GcpGroups{}
 	if tfvars.HasGroupsCreation() {
+		//orgTfvars.BillingDataUsers = (*tfvars.Groups).RequiredGroups.BillingDataUsers
+		//orgTfvars.AuditDataUsers = (*tfvars.Groups).RequiredGroups.AuditDataUsers
+		orgTfvars.GcpGroups = GcpGroups{}
 		if (*tfvars.Groups.OptionalGroups.GcpSecurityReviewer) != "" {
 			orgTfvars.GcpGroups.SecurityReviewer = tfvars.Groups.OptionalGroups.GcpSecurityReviewer
 		}

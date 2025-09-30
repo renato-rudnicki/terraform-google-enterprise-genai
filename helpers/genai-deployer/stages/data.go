@@ -97,10 +97,11 @@ type ServerAddress struct {
 }
 
 type RequiredGroups struct {
-	GroupOrgAdmins     string `cty:"group_org_admins"`
-	GroupBillingAdmins string `cty:"group_billing_admins"`
-	BillingDataUsers   string `cty:"billing_data_users"`
-	AuditDataUsers     string `cty:"audit_data_users"`
+	GroupOrgAdmins           string `cty:"group_org_admins"`
+	GroupBillingAdmins       string `cty:"group_billing_admins"`
+	BillingDataUsers         string `cty:"billing_data_users"`
+	AuditDataUsers           string `cty:"audit_data_users"`
+	MonitoringWorkspaceUsers string `cty:"monitoring_workspace_users"`
 }
 
 type OptionalGroups struct {
@@ -113,12 +114,10 @@ type OptionalGroups struct {
 }
 
 type Groups struct {
-	CreateRequiredGroups *bool           `cty:"create_required_groups"`
-	CreateOptionalGroups *bool           `cty:"create_optional_groups"`
-	CreateGroups         bool            `cty:"create_groups"`
-	BillingProject       *string         `cty:"billing_project"`
-	RequiredGroups       RequiredGroups  `cty:"required_groups"`
-	OptionalGroups       *OptionalGroups `cty:"optional_groups"`
+	CreateGroups   bool           `cty:"create_groups"`
+	BillingProject string         `cty:"billing_project"`
+	RequiredGroups RequiredGroups `cty:"required_groups"`
+	OptionalGroups OptionalGroups `cty:"optional_groups"`
 }
 
 type GcpGroups struct {
@@ -161,7 +160,7 @@ type GlobalTFVars struct {
 	CodeCheckoutPath                      string          `hcl:"code_checkout_path"`
 	GenaiCodePath                         string          `hcl:"genai_code_path"`
 	ValidatorProjectId                    *string         `hcl:"validator_project_id"`
-	Groups                                Groups          `hcl:"groups"`
+	Groups                                *Groups         `hcl:"groups"`
 	InitialGroupConfig                    *string         `hcl:"initial_group_config"`
 	FolderDeletionProtection              *bool           `hcl:"folder_deletion_protection"`
 	ServiceCatalogRepo                    string          `hcl:"cloud_source_service_catalog_repo_name"`
@@ -173,18 +172,9 @@ func (g GlobalTFVars) HasValidatorProj() bool {
 	return g.ValidatorProjectId != nil && *g.ValidatorProjectId != "" && *g.ValidatorProjectId != "EXISTING_PROJECT_ID"
 }
 
+// HasGroupsCreation checks if Groups creation is enabled
 func (g GlobalTFVars) HasGroupsCreation() bool {
-	return g.HasRequiredGroupsCreation() || g.HasOptionalGroupsCreation()
-}
-
-// HasRequiredGroupsCreation checks if Required Groups creation is enabled
-func (g GlobalTFVars) HasRequiredGroupsCreation() bool {
-	return (*g.Groups.CreateRequiredGroups)
-}
-
-// HasOptionalGroupsCreation checks if Optional Groups creation is enabled
-func (g GlobalTFVars) HasOptionalGroupsCreation() bool {
-	return (*g.Groups.CreateOptionalGroups)
+	return g.Groups != nil && (*g.Groups).CreateGroups
 }
 
 // CheckString checks if any of the string fields in the GlobalTFVars has the given string
@@ -206,7 +196,7 @@ type BootstrapTfvars struct {
 	FolderPrefix                 *string `hcl:"folder_prefix"`
 	BucketForceDestroy           *bool   `hcl:"bucket_force_destroy"`
 	BucketTfstateKmsForceDestroy *bool   `hcl:"bucket_tfstate_kms_force_destroy"`
-	Groups                       Groups  `hcl:"groups"`
+	Groups                       *Groups `hcl:"groups"`
 	InitialGroupConfig           *string `hcl:"initial_group_config"`
 	FolderDeletionProtection     *bool   `hcl:"folder_deletion_protection"`
 }

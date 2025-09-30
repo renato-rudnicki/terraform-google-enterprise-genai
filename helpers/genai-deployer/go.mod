@@ -4,9 +4,7 @@ go 1.24.0
 
 toolchain go1.24.7
 
-replace github.com/terraform-google-modules/terraform-google-enterprise-genai/test/integration => /home/renatojr/git/lab/genai/helper-genai-020925/terraform-google-enterprise-genai/test/integration
-
-replace github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration => /home/renatojr/git/lab/genai/helper-genai-020925/terraform-google-enterprise-genai/test/integration
+replace github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration => /home/renatojr/git/lab/genai/helper-genai-02092025/terraform-google-enterprise-genai/test/integration
 
 require (
 	github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test v0.17.9
@@ -48,7 +46,7 @@ require (
 	golang.org/x/crypto v0.40.0 // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/net v0.42.0 // indirect
-	golang.org/x/oauth2 v0.31.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.27.0 // indirect

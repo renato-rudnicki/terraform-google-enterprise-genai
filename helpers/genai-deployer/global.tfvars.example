@@ -68,6 +68,7 @@ groups = {
     group_billing_admins       = "REPLACE_ME" # "gcp-billing-admins@example.com"
     billing_data_users         = "REPLACE_ME" #"billing_data_users_local_test@example.com"
     audit_data_users           = "REPLACE_ME" #"audit_data_users_local_test@example.com"
+    monitoring_workspace_users = "REPLACE_ME" # "gcp-monitoring-admins@example.com"
   }
   optional_groups = {
     gcp_security_reviewer      = "" #"gcp_security_reviewer_local_test@example.com"
@@ -106,7 +107,6 @@ enable_hub_and_spoke = false
 // unique organization-wide it will add a random suffix at each tag key
 
 create_unique_tag_key = false
-
 
 
 // 2-environments inputs
@@ -156,5 +156,4 @@ cloud_source_artifacts_repo_name = "publish-artifacts"
 // 5-app-infra inputs
 // https://github.com/terraform-google-modules/terraform-example-foundation/blob/main/5-app-infra/README.md
 
-instance_region = "us-central1"
-//log_bucket = 
+//instance_region = "us-central1"
