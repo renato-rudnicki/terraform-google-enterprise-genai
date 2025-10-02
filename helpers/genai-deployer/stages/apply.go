@@ -35,6 +35,8 @@ func DeployBootstrapStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, c Co
 		OrgID:                        tfvars.OrgID,
 		DefaultRegion:                tfvars.DefaultRegion,
 		BillingAccount:               tfvars.BillingAccount,
+		GroupOrgAdmins:               tfvars.GroupOrgAdmins,
+		GroupBillingAdmins:           tfvars.GroupBillingAdmins,
 		ParentFolder:                 tfvars.ParentFolder,
 		ProjectPrefix:                tfvars.ProjectPrefix,
 		FolderPrefix:                 tfvars.FolderPrefix,

@@ -86,7 +86,8 @@ module "gcp_projects_state_bucket" {
 
 module "tf_source" {
   source  = "terraform-google-modules/bootstrap/google//modules/tf_cloudbuild_source"
-  version = "~> 11.0"
+  version = "~> 6.4"
+  #version = "~> 11.0"
 
   org_id                = var.org_id
   folder_id             = google_folder.bootstrap.id
@@ -153,8 +154,9 @@ module "tf_private_pool" {
 }
 
 module "tf_cloud_builder" {
-  source  = "terraform-google-modules/bootstrap/google//modules/tf_cloudbuild_builder"
-  version = "~> 11.0"
+  source = "terraform-google-modules/bootstrap/google//modules/tf_cloudbuild_builder"
+  #version = "~> 11.0"
+  version = "~> 6.4"
 
   project_id                   = module.tf_source.cloudbuild_project_id
   dockerfile_repo_uri          = module.tf_source.csr_repos[local.cloudbuilder_repo].url
@@ -204,8 +206,9 @@ module "build_terraform_image" {
 }
 
 module "tf_workspace" {
-  source   = "terraform-google-modules/bootstrap/google//modules/tf_cloudbuild_workspace"
-  version  = "~> 11.0"
+  source = "terraform-google-modules/bootstrap/google//modules/tf_cloudbuild_workspace"
+  #version  = "~> 11.0"
+  version  = "~> 6.4"
   for_each = local.granular_sa
 
   project_id                = module.tf_source.cloudbuild_project_id
@@ -251,6 +254,8 @@ resource "google_artifact_registry_repository_iam_member" "terraform_sa_artifact
   repository = local.gar_repository
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.terraform-env-sa[each.key].email}"
+
+  depends_on = [module.tf_source]
 }
 
 resource "google_sourcerepo_repository_iam_member" "member" {
@@ -260,4 +265,6 @@ resource "google_sourcerepo_repository_iam_member" "member" {
   repository = module.tf_source.csr_repos["gcp-policies"].name
   role       = "roles/viewer"
   member     = "serviceAccount:${google_service_account.terraform-env-sa[each.key].email}"
+
+  depends_on = [module.tf_source]
 }

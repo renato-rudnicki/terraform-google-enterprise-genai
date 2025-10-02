@@ -134,6 +134,8 @@ type GlobalTFVars struct {
 	BillingAccount                        string          `hcl:"billing_account"`
 	DefaultRegion                         string          `hcl:"default_region"`
 	ParentFolder                          *string         `hcl:"parent_folder"`
+	GroupOrgAdmins                        string          `hcl:"group_org_admins"`
+	GroupBillingAdmins                    string          `hcl:"group_billing_admins"`
 	Domain                                string          `hcl:"domain"`
 	MonitoringWorkspaceUsers              string          `hcl:"monitoring_workspace_users"`
 	DomainsToAllow                        []string        `hcl:"domains_to_allow"`
@@ -190,6 +192,8 @@ func (g GlobalTFVars) CheckString(s string) {
 type BootstrapTfvars struct {
 	OrgID                        string  `hcl:"org_id"`
 	BillingAccount               string  `hcl:"billing_account"`
+	GroupOrgAdmins               string  `hcl:"group_org_admins"`
+	GroupBillingAdmins           string  `hcl:"group_billing_admins"`
 	DefaultRegion                string  `hcl:"default_region"`
 	ParentFolder                 *string `hcl:"parent_folder"`
 	ProjectPrefix                *string `hcl:"project_prefix"`
