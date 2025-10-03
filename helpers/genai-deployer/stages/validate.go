@@ -94,39 +94,27 @@ func ValidateBasicFields(t testing.TB, g GlobalTFVars) {
 
 // ValidateDestroyFlags checks if the flags to allow the destruction of the infrastructure are enabled
 func ValidateDestroyFlags(t testing.TB, g GlobalTFVars) {
-	trueFlags := []string{}
-	falseFlags := []string{}
-	projectDeletion := false
+	flags := []string{}
 
 	if g.BucketForceDestroy == nil || !*g.BucketForceDestroy {
-		trueFlags = append(trueFlags, "bucket_force_destroy")
+		flags = append(flags, "bucket_force_destroy")
 	}
 	if g.AuditLogsTableDeleteContentsOnDestroy == nil || !*g.AuditLogsTableDeleteContentsOnDestroy {
-		trueFlags = append(trueFlags, "audit_logs_table_delete_contents_on_destroy")
+		flags = append(flags, "audit_logs_table_delete_contents_on_destroy")
 	}
 	if g.LogExportStorageForceDestroy == nil || !*g.LogExportStorageForceDestroy {
-		trueFlags = append(trueFlags, "log_export_storage_force_destroy")
+		flags = append(flags, "log_export_storage_force_destroy")
 	}
 	if g.CaiMonitoringKmsForceDestroy == nil || !*g.CaiMonitoringKmsForceDestroy {
-		trueFlags = append(trueFlags, "cai_monitoring_kms_force_destroy")
+		flags = append(flags, "cai_monitoring_kms_force_destroy")
 	}
 	if g.BucketTfstateKmsForceDestroy == nil || !*g.BucketTfstateKmsForceDestroy {
-		trueFlags = append(trueFlags, "bucket_tfstate_kms_force_destroy")
+		flags = append(flags, "bucket_tfstate_kms_force_destroy")
 	}
-	if g.FolderDeletionProtection != nil && *g.FolderDeletionProtection {
-		falseFlags = append(falseFlags, "folder_deletion_protection")
-	}
-	//projectDeletion = g.ProjectDeletionPolicy != "DELETE"
 
-	if len(trueFlags) > 0 || len(falseFlags) > 0 || projectDeletion {
+	if len(flags) > 0 {
 		fmt.Println("# To use the feature to destroy the deployment created by this helper,")
-		if len(trueFlags) > 0 {
-			fmt.Println("# please set the following flags to 'true' in the tfvars file:")
-			fmt.Printf("# %s\n", strings.Join(trueFlags, ", "))
-		}
-		if len(falseFlags) > 0 {
-			fmt.Println("# please set the following flags to 'false' in the tfvars file:")
-			fmt.Printf("# %s\n", strings.Join(falseFlags, ", "))
-		}
+		fmt.Println("# please set the following flags to 'true' in the tfvars file:")
+		fmt.Printf("# %s\n", strings.Join(flags, ", "))
 	}
 }

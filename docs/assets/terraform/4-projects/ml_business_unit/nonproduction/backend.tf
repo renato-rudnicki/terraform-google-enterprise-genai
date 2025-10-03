@@ -16,7 +16,7 @@
 
 terraform {
   backend "gcs" {
-    bucket = "UPDATE_PROJECTS_BACKEND"
+    bucket = "bkt-prj-b-seed-f096-gcp-projects-tfstate"
     prefix = "terraform/projects/ml_business_unit/nonproduction"
   }
 }

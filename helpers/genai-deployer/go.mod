@@ -8,7 +8,8 @@ replace github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/in
 
 require (
 	github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test v0.17.9
-	github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration v0.0.0-00010101000000-000000000000
+	//github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration v0.0.0-00010101000000-000000000000
+	github.com/terraform-google-modules/terraform-example-foundation/test/integration v0.0.0-20240808135927-5f1fd0f4104a
 	github.com/gruntwork-io/terratest v0.51.0
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/mitchellh/go-testing-interface v1.14.2-0.20210821155943-2d9075ca8770

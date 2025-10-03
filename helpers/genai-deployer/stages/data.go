@@ -135,9 +135,11 @@ type GlobalTFVars struct {
 	DefaultRegion                         string          `hcl:"default_region"`
 	ParentFolder                          *string         `hcl:"parent_folder"`
 	GroupOrgAdmins                        string          `hcl:"group_org_admins"`
+	BillingDataUsers                      string          `hcl:"billing_data_users"`
 	GroupBillingAdmins                    string          `hcl:"group_billing_admins"`
 	Domain                                string          `hcl:"domain"`
 	MonitoringWorkspaceUsers              string          `hcl:"monitoring_workspace_users"`
+	AuditDataUsers                        string          `hcl:"audit_data_users"`
 	DomainsToAllow                        []string        `hcl:"domains_to_allow"`
 	EssentialContactsDomains              []string        `hcl:"essential_contacts_domains_to_allow"`
 	PerimeterAdditionalMembers            []string        `hcl:"perimeter_additional_members"`
@@ -164,9 +166,9 @@ type GlobalTFVars struct {
 	ValidatorProjectId                    *string         `hcl:"validator_project_id"`
 	Groups                                *Groups         `hcl:"groups"`
 	InitialGroupConfig                    *string         `hcl:"initial_group_config"`
-	FolderDeletionProtection              *bool           `hcl:"folder_deletion_protection"`
-	ServiceCatalogRepo                    string          `hcl:"cloud_source_service_catalog_repo_name"`
-	ArtifactsRepoName                     string          `hcl:"cloud_source_artifacts_repo_name"`
+	//FolderDeletionProtection              *bool           `hcl:"folder_deletion_protection"`
+	ServiceCatalogRepo string `hcl:"cloud_source_service_catalog_repo_name"`
+	ArtifactsRepoName  string `hcl:"cloud_source_artifacts_repo_name"`
 }
 
 // HasValidatorProj checks if a Validator Project was provided
@@ -202,7 +204,7 @@ type BootstrapTfvars struct {
 	BucketTfstateKmsForceDestroy *bool   `hcl:"bucket_tfstate_kms_force_destroy"`
 	Groups                       *Groups `hcl:"groups"`
 	InitialGroupConfig           *string `hcl:"initial_group_config"`
-	FolderDeletionProtection     *bool   `hcl:"folder_deletion_protection"`
+	//FolderDeletionProtection     *bool   `hcl:"folder_deletion_protection"`
 }
 
 type OrgTfvars struct {
@@ -210,6 +212,8 @@ type OrgTfvars struct {
 	EssentialContactsDomains              []string  `hcl:"essential_contacts_domains_to_allow"`
 	SccNotificationName                   string    `hcl:"scc_notification_name"`
 	RemoteStateBucket                     string    `hcl:"remote_state_bucket"`
+	BillingDataUsers                      string    `hcl:"billing_data_users"`
+	AuditDataUsers                        string    `hcl:"audit_data_users"`
 	EnableHubAndSpoke                     bool      `hcl:"enable_hub_and_spoke"`
 	CreateACMAPolicy                      bool      `hcl:"create_access_context_manager_access_policy"`
 	CreateUniqueTagKey                    bool      `hcl:"create_unique_tag_key"`
@@ -220,12 +224,12 @@ type OrgTfvars struct {
 	LogExportStorageLocation              string    `hcl:"log_export_storage_location"`
 	BillingExportDatasetLocation          string    `hcl:"billing_export_dataset_location"`
 	GcpGroups                             GcpGroups `hcl:"gcp_groups"`
-	FolderDeletionProtection              *bool     `hcl:"folder_deletion_protection"`
+	//FolderDeletionProtection              *bool     `hcl:"folder_deletion_protection"`
 }
 
 type EnvsTfvars struct {
-	RemoteStateBucket        string `hcl:"remote_state_bucket"`
-	FolderDeletionProtection *bool  `hcl:"folder_deletion_protection"`
+	RemoteStateBucket string `hcl:"remote_state_bucket"`
+	//FolderDeletionProtection *bool  `hcl:"folder_deletion_protection"`
 	MonitoringWorkspaceUsers string `hcl:"monitoring_workspace_users"`
 }
 
@@ -259,9 +263,9 @@ type ProjSharedTfvars struct {
 }
 
 type ProjEnvTfvars struct {
-	LocationKMS              string `hcl:"location_kms"`
-	LocationGCS              string `hcl:"location_gcs"`
-	FolderDeletionProtection *bool  `hcl:"folder_deletion_protection"`
+	LocationKMS string `hcl:"location_kms"`
+	LocationGCS string `hcl:"location_gcs"`
+	//FolderDeletionProtection *bool  `hcl:"folder_deletion_protection"`
 }
 
 type AppInfraCommonTfvars struct {

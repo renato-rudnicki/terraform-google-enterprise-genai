@@ -44,7 +44,7 @@ func DeployBootstrapStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, c Co
 		BucketTfstateKmsForceDestroy: tfvars.BucketTfstateKmsForceDestroy,
 		Groups:                       tfvars.Groups,
 		InitialGroupConfig:           tfvars.InitialGroupConfig,
-		FolderDeletionProtection:     tfvars.FolderDeletionProtection,
+		//FolderDeletionProtection:     tfvars.FolderDeletionProtection,
 	}
 
 	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, BootstrapStep, "terraform.tfvars"), bootstrapTfvars)
@@ -207,7 +207,7 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		LogExportStorageForceDestroy:          tfvars.LogExportStorageForceDestroy,
 		LogExportStorageLocation:              tfvars.LogExportStorageLocation,
 		BillingExportDatasetLocation:          tfvars.BillingExportDatasetLocation,
-		FolderDeletionProtection:              tfvars.FolderDeletionProtection,
+		//FolderDeletionProtection:              tfvars.FolderDeletionProtection,
 	}
 	if tfvars.HasGroupsCreation() {
 		//orgTfvars.BillingDataUsers = (*tfvars.Groups).RequiredGroups.BillingDataUsers
@@ -246,11 +246,40 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 	return deployStage(t, stageConf, s, c)
 }
 
+// func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs BootstrapOutputs, c CommonConf) error {
+
+// 	envsTfvars := EnvsTfvars{
+// 		RemoteStateBucket:        outputs.RemoteStateBucket,
+// 		MonitoringWorkspaceUsers: tfvars.MonitoringWorkspaceUsers,
+// 		//FolderDeletionProtection: tfvars.FolderDeletionProtection,
+// 	}
+// 	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, EnvironmentsStep, "terraform.tfvars"), envsTfvars)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	conf := utils.CloneCSR(t, EnvironmentsRepo, filepath.Join(c.CheckoutPath, EnvironmentsRepo), outputs.CICDProject, c.Logger)
+// 	stageConf := StageConf{
+// 		Stage:         EnvironmentsRepo,
+// 		CICDProject:   outputs.CICDProject,
+// 		DefaultRegion: outputs.DefaultRegion,
+// 		Step:          EnvironmentsStep,
+// 		Repo:          EnvironmentsRepo,
+// 		GitConf:       conf,
+// 		Envs:          []string{"production", "nonproduction", "development"},
+// 	}
+
+// 	return deployStage(t, stageConf, s, c)
+// }
+
 func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs BootstrapOutputs, c CommonConf) error {
 
 	envsTfvars := EnvsTfvars{
+		MonitoringWorkspaceUsers: tfvars.MonitoringWorkspaceUsers,
 		RemoteStateBucket:        outputs.RemoteStateBucket,
-		FolderDeletionProtection: tfvars.FolderDeletionProtection,
+	}
+	if tfvars.HasGroupsCreation() {
+		envsTfvars.MonitoringWorkspaceUsers = (*tfvars.Groups).RequiredGroups.MonitoringWorkspaceUsers
 	}
 	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, EnvironmentsStep, "terraform.tfvars"), envsTfvars)
 	if err != nil {
@@ -265,7 +294,7 @@ func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		Step:          EnvironmentsStep,
 		Repo:          EnvironmentsRepo,
 		GitConf:       conf,
-		Envs:          []string{"production", "nonproduction", "development"},
+		Envs:          []string{"production", "non-production", "development"},
 	}
 
 	return deployStage(t, stageConf, s, c)
@@ -360,9 +389,9 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 	}
 	//for each environment
 	envTfvars := ProjEnvTfvars{
-		LocationKMS:              tfvars.LocationKMS,
-		LocationGCS:              tfvars.LocationGCS,
-		FolderDeletionProtection: tfvars.FolderDeletionProtection,
+		LocationKMS: tfvars.LocationKMS,
+		LocationGCS: tfvars.LocationGCS,
+		//FolderDeletionProtection: tfvars.FolderDeletionProtection,
 	}
 	for _, envfile := range []string{
 		"development.auto.tfvars",
