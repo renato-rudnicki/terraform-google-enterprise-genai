@@ -27,7 +27,7 @@ import (
 	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/steps"
 	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/utils"
 
-	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration/testutils"
+	"github.com/terraform-google-modules/terraform-example-foundation/test/integration/testutils"
 )
 
 func DeployBootstrapStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, c CommonConf) error {
