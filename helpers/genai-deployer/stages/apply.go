@@ -27,7 +27,7 @@ import (
 	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/steps"
 	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/utils"
 
-	"github.com/terraform-google-modules/terraform-example-foundation/test/integration/testutils"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration/testutils"
 )
 
 func DeployBootstrapStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, c CommonConf) error {
@@ -44,7 +44,9 @@ func DeployBootstrapStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, c Co
 		BucketTfstateKmsForceDestroy: tfvars.BucketTfstateKmsForceDestroy,
 		Groups:                       tfvars.Groups,
 		InitialGroupConfig:           tfvars.InitialGroupConfig,
-		//FolderDeletionProtection:     tfvars.FolderDeletionProtection,
+		FolderDeletionProtection:     tfvars.FolderDeletionProtection,
+		ProjectDeletionPolicy:        tfvars.ProjectDeletionPolicy,
+		WorkflowDeletionProtection:   tfvars.WorkflowDeletionProtection,
 	}
 
 	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, BootstrapStep, "terraform.tfvars"), bootstrapTfvars)
@@ -644,7 +646,7 @@ func applyEnv(t testing.TB, conf utils.GitRepo, project, region, repo, environme
 	return gcp.NewGCP().WaitBuildSuccess(t, project, region, repo, commitSha, fmt.Sprintf("Terraform %s apply %s build Failed.", repo, environment), MaxBuildRetries)
 }
 
-func applyLocal(t testing.TB, options *terraform.Options, serviceAccount, policyPath, validatorProjectId string) error {
+func applyLocal(t testing.TB, options *terraform.Options, serviceAccount, policyPath, ValidatorProjectID string) error {
 	var err error
 
 	if serviceAccount != "" {
@@ -664,8 +666,8 @@ func applyLocal(t testing.TB, options *terraform.Options, serviceAccount, policy
 	}
 
 	// Runs gcloud terraform vet
-	if validatorProjectId != "" {
-		err = TerraformVet(t, options.TerraformDir, policyPath, validatorProjectId)
+	if ValidatorProjectID != "" {
+		err = TerraformVet(t, options.TerraformDir, policyPath, ValidatorProjectID)
 		if err != nil {
 			return err
 		}

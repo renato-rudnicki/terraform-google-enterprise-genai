@@ -96,6 +96,8 @@ module "tf_source" {
   group_org_admins      = local.group_org_admins
   buckets_force_destroy = var.bucket_force_destroy
 
+  project_deletion_policy = var.project_deletion_policy
+
   activate_apis = [
     "serviceusage.googleapis.com",
     "servicenetworking.googleapis.com",
@@ -169,6 +171,9 @@ module "tf_cloud_builder" {
   worker_pool_id               = module.tf_private_pool.private_worker_pool_id
   bucket_name                  = "${var.bucket_prefix}-${module.tf_source.cloudbuild_project_id}-tf-cloudbuilder-build-logs"
   build_timeout                = "1200s"
+  workflow_deletion_protection = var.workflow_deletion_protection
+
+  depends_on = [module.tf_source]
 }
 
 module "bootstrap_csr_repo" {

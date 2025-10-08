@@ -166,17 +166,19 @@ type GlobalTFVars struct {
 	LocationGCS                           string          `hcl:"location_gcs"`
 	CodeCheckoutPath                      string          `hcl:"code_checkout_path"`
 	GenaiCodePath                         string          `hcl:"genai_code_path"`
-	ValidatorProjectId                    *string         `hcl:"validator_project_id"`
+	ValidatorProjectID                    *string         `hcl:"validator_project_id"`
 	Groups                                *Groups         `hcl:"groups"`
 	InitialGroupConfig                    *string         `hcl:"initial_group_config"`
-	//FolderDeletionProtection              *bool           `hcl:"folder_deletion_protection"`
-	ServiceCatalogRepo string `hcl:"cloud_source_service_catalog_repo_name"`
-	ArtifactsRepoName  string `hcl:"cloud_source_artifacts_repo_name"`
+	WorkflowDeletionProtection            *bool           `hcl:"workflow_deletion_protection"`
+	FolderDeletionProtection              *bool           `hcl:"folder_deletion_protection"`
+	ServiceCatalogRepo                    string          `hcl:"cloud_source_service_catalog_repo_name"`
+	ArtifactsRepoName                     string          `hcl:"cloud_source_artifacts_repo_name"`
+	ProjectDeletionPolicy                 string          `hcl:"project_deletion_policy"`
 }
 
 // HasValidatorProj checks if a Validator Project was provided
 func (g GlobalTFVars) HasValidatorProj() bool {
-	return g.ValidatorProjectId != nil && *g.ValidatorProjectId != "" && *g.ValidatorProjectId != "EXISTING_PROJECT_ID"
+	return g.ValidatorProjectID != nil && *g.ValidatorProjectID != "" && *g.ValidatorProjectID != "EXISTING_PROJECT_ID"
 }
 
 // HasGroupsCreation checks if Groups creation is enabled
@@ -207,7 +209,9 @@ type BootstrapTfvars struct {
 	BucketTfstateKmsForceDestroy *bool   `hcl:"bucket_tfstate_kms_force_destroy"`
 	Groups                       *Groups `hcl:"groups"`
 	InitialGroupConfig           *string `hcl:"initial_group_config"`
-	//FolderDeletionProtection     *bool   `hcl:"folder_deletion_protection"`
+	FolderDeletionProtection     *bool   `hcl:"folder_deletion_protection"`
+	ProjectDeletionPolicy        string  `hcl:"project_deletion_policy"`
+	WorkflowDeletionProtection   *bool   `hcl:"workflow_deletion_protection"`
 }
 
 type OrgTfvars struct {

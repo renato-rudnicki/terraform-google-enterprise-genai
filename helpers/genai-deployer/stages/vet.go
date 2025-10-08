@@ -20,14 +20,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/gcloud"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/tidwall/gjson"
 
-	"github.com/terraform-google-modules/terraform-example-foundation/helpers/foundation-deployer/utils"
-	"github.com/terraform-google-modules/terraform-example-foundation/test/integration/testutils"
+	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/gcloud"
+	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/utils"
+
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration/testutils"
 )
 
 // TerraformVet runs gcloud terraform vet on the plan of the provided terraform directory
