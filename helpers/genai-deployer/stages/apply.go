@@ -128,7 +128,7 @@ func DeployBootstrapStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, c Co
 	msg.PrintBuildMsg(cbProjectID, defaultRegion, c.DisablePrompt)
 
 	// Check if image build was successful.
-	err = gcp.NewGCP().WaitBuildSuccess(t, cbProjectID, defaultRegion, "tf-cloudbuilder", "", "Terraform Image builder Build Failed for tf-cloudbuilder repository.", MaxBuildRetries)
+	err = gcp.NewGCP().WaitBuildSuccess(t, cbProjectID, defaultRegion, "tf-cloudbuilder", "", "Terraform Image builder Build Failed for tf-cloudbuilder repository.", MaxBuildRetries, MaxErrorRetries, TimeBetweenErrorRetries)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,6 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		EssentialContactsDomains:              tfvars.EssentialContactsDomains,
 		SccNotificationName:                   tfvars.SccNotificationName,
 		RemoteStateBucket:                     outputs.RemoteStateBucket,
-		EnableHubAndSpoke:                     tfvars.EnableHubAndSpoke,
 		CreateACMAPolicy:                      createACMAPolicy,
 		CreateUniqueTagKey:                    tfvars.CreateUniqueTagKey,
 		AuditLogsTableDeleteContentsOnDestroy: tfvars.AuditLogsTableDeleteContentsOnDestroy,
@@ -209,7 +208,7 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		LogExportStorageForceDestroy:          tfvars.LogExportStorageForceDestroy,
 		LogExportStorageLocation:              tfvars.LogExportStorageLocation,
 		BillingExportDatasetLocation:          tfvars.BillingExportDatasetLocation,
-		//FolderDeletionProtection:              tfvars.FolderDeletionProtection,
+		// FolderDeletionProtection:              tfvars.FolderDeletionProtection,
 	}
 	if tfvars.HasGroupsCreation() {
 		//orgTfvars.BillingDataUsers = (*tfvars.Groups).RequiredGroups.BillingDataUsers
@@ -304,21 +303,13 @@ func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 
 func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs BootstrapOutputs, c CommonConf) error {
 
-	step := GetNetworkStep(c.EnableHubAndSpoke)
-
-	var localStep []string
-
-	if c.EnableHubAndSpoke {
-		localStep = []string{"shared"}
-	} else {
-		localStep = []string{"shared", "production"}
-	}
+	localStep := []string{"shared", "production"}
 
 	// shared
 	sharedTfvars := NetSharedTfvars{
 		TargetNameServerAddresses: tfvars.TargetNameServerAddresses,
 	}
-	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, step, "shared.auto.tfvars"), sharedTfvars)
+	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, DualSvpcStep, "shared.auto.tfvars"), sharedTfvars)
 	if err != nil {
 		return err
 	}
@@ -326,7 +317,7 @@ func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 	productionTfvars := NetProductionTfvars{
 		TargetNameServerAddresses: tfvars.TargetNameServerAddresses,
 	}
-	err = utils.WriteTfvars(filepath.Join(c.GenaiPath, step, "production.auto.tfvars"), productionTfvars)
+	err = utils.WriteTfvars(filepath.Join(c.GenaiPath, DualSvpcStep, "production.auto.tfvars"), productionTfvars)
 	if err != nil {
 		return err
 	}
@@ -336,10 +327,7 @@ func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		PerimeterAdditionalMembers: tfvars.PerimeterAdditionalMembers,
 		RemoteStateBucket:          outputs.RemoteStateBucket,
 	}
-	if tfvars.EnableHubAndSpoke {
-		commonTfvars.EnableHubAndSpokeTransitivity = &tfvars.EnableHubAndSpokeTransitivity
-	}
-	err = utils.WriteTfvars(filepath.Join(c.GenaiPath, step, "common.auto.tfvars"), commonTfvars)
+	err = utils.WriteTfvars(filepath.Join(c.GenaiPath, DualSvpcStep, "common.auto.tfvars"), commonTfvars)
 	if err != nil {
 		return err
 	}
@@ -347,7 +335,7 @@ func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 	accessContextTfvars := NetAccessContextTfvars{
 		AccessContextManagerPolicyID: testutils.GetOrgACMPolicyID(t, tfvars.OrgID),
 	}
-	err = utils.WriteTfvars(filepath.Join(c.GenaiPath, step, "access_context.auto.tfvars"), accessContextTfvars)
+	err = utils.WriteTfvars(filepath.Join(c.GenaiPath, DualSvpcStep, "access_context.auto.tfvars"), accessContextTfvars)
 	if err != nil {
 		return err
 	}
@@ -358,7 +346,7 @@ func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		StageSA:       outputs.NetworkSA,
 		CICDProject:   outputs.CICDProject,
 		DefaultRegion: outputs.DefaultRegion,
-		Step:          step,
+		Step:          DualSvpcStep,
 		Repo:          NetworksRepo,
 		GitConf:       conf,
 		HasLocalStep:  true,
@@ -562,7 +550,6 @@ func copyStepCode(t testing.TB, conf utils.GitRepo, genaiPath, checkoutPath, rep
 	}
 	return utils.CopyFile(filepath.Join(genaiPath, "build/tf-wrapper.sh"), filepath.Join(gcpPath, "tf-wrapper.sh"))
 }
-
 func planStage(t testing.TB, conf utils.GitRepo, project, region, repo string) error {
 
 	err := conf.CommitFiles(fmt.Sprintf("Initialize %s repo", repo))
@@ -579,7 +566,7 @@ func planStage(t testing.TB, conf utils.GitRepo, project, region, repo string) e
 		return err
 	}
 
-	return gcp.NewGCP().WaitBuildSuccess(t, project, region, repo, commitSha, fmt.Sprintf("Terraform %s plan build Failed.", repo), MaxBuildRetries)
+	return gcp.NewGCP().WaitBuildSuccess(t, project, region, repo, commitSha, fmt.Sprintf("Terraform %s plan build Failed.", repo), MaxBuildRetries, MaxErrorRetries, TimeBetweenErrorRetries)
 }
 
 func saveBootstrapCodeOnly(t testing.TB, sc StageConf, s steps.Steps, c CommonConf) error {
@@ -643,7 +630,7 @@ func applyEnv(t testing.TB, conf utils.GitRepo, project, region, repo, environme
 		return err
 	}
 
-	return gcp.NewGCP().WaitBuildSuccess(t, project, region, repo, commitSha, fmt.Sprintf("Terraform %s apply %s build Failed.", repo, environment), MaxBuildRetries)
+	return gcp.NewGCP().WaitBuildSuccess(t, project, region, repo, commitSha, fmt.Sprintf("Terraform %s apply %s build Failed.", repo, environment), MaxBuildRetries, MaxErrorRetries, TimeBetweenErrorRetries)
 }
 
 func applyLocal(t testing.TB, options *terraform.Options, serviceAccount, policyPath, ValidatorProjectID string) error {

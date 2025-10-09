@@ -176,6 +176,15 @@ module "tf_cloud_builder" {
   depends_on = [module.tf_source]
 }
 
+resource "google_project_service_identity" "workflows_identity" {
+  provider = google-beta
+
+  project = module.tf_source.cloudbuild_project_id
+  service = "workflows.googleapis.com"
+
+  depends_on = [module.tf_source]
+}
+
 module "bootstrap_csr_repo" {
   source  = "terraform-google-modules/gcloud/google"
   version = "~> 3.1"

@@ -103,12 +103,11 @@ func main() {
 	}
 
 	conf := stages.CommonConf{
-		GenaiPath:         globalTFVars.GenaiCodePath,
-		CheckoutPath:      globalTFVars.CodeCheckoutPath,
-		PolicyPath:        filepath.Join(globalTFVars.GenaiCodePath, "policy-library"),
-		EnableHubAndSpoke: globalTFVars.EnableHubAndSpoke,
-		DisablePrompt:     cfg.disablePrompt,
-		Logger:            utils.GetLogger(cfg.quiet),
+		GenaiPath:     globalTFVars.GenaiCodePath,
+		CheckoutPath:  globalTFVars.CodeCheckoutPath,
+		PolicyPath:    filepath.Join(globalTFVars.GenaiCodePath, "policy-library"),
+		DisablePrompt: cfg.disablePrompt,
+		Logger:        utils.GetLogger(cfg.quiet),
 	}
 
 	// only enable services if they are not already enabled

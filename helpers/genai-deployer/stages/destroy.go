@@ -109,12 +109,11 @@ func DestroyEnvStage(t testing.TB, s steps.Steps, outputs BootstrapOutputs, c Co
 }
 
 func DestroyNetworksStage(t testing.TB, s steps.Steps, outputs BootstrapOutputs, c CommonConf) error {
-	step := GetNetworkStep(c.EnableHubAndSpoke)
 	stageConf := StageConf{
 		Stage:         NetworksRepo,
 		StageSA:       outputs.NetworkSA,
 		CICDProject:   outputs.CICDProject,
-		Step:          step,
+		Step:          DualSvpcStep,
 		Repo:          NetworksRepo,
 		HasLocalStep:  true,
 		GroupingUnits: []string{"envs"},

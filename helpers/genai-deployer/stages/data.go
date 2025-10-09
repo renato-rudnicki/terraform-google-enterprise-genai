@@ -48,13 +48,12 @@ const (
 )
 
 type CommonConf struct {
-	GenaiPath         string
-	CheckoutPath      string
-	PolicyPath        string
-	ValidatorProject  string
-	EnableHubAndSpoke bool
-	DisablePrompt     bool
-	Logger            *logger.Logger
+	GenaiPath        string
+	CheckoutPath     string
+	PolicyPath       string
+	ValidatorProject string
+	DisablePrompt    bool
+	Logger           *logger.Logger
 }
 
 type StageConf struct {
@@ -159,8 +158,6 @@ type GlobalTFVars struct {
 	LogExportStorageForceDestroy          *bool           `hcl:"log_export_storage_force_destroy"`
 	LogExportStorageLocation              string          `hcl:"log_export_storage_location"`
 	BillingExportDatasetLocation          string          `hcl:"billing_export_dataset_location"`
-	EnableHubAndSpoke                     bool            `hcl:"enable_hub_and_spoke"`
-	EnableHubAndSpokeTransitivity         bool            `hcl:"enable_hub_and_spoke_transitivity"`
 	CreateUniqueTagKey                    bool            `hcl:"create_unique_tag_key"`
 	LocationKMS                           string          `hcl:"location_kms"`
 	LocationGCS                           string          `hcl:"location_gcs"`
@@ -174,6 +171,8 @@ type GlobalTFVars struct {
 	ServiceCatalogRepo                    string          `hcl:"cloud_source_service_catalog_repo_name"`
 	ArtifactsRepoName                     string          `hcl:"cloud_source_artifacts_repo_name"`
 	ProjectDeletionPolicy                 string          `hcl:"project_deletion_policy"`
+	KmsPreventDestroy                     *bool           `hcl:"kms_prevent_destroy"`
+	Env                                   string          `hcl:"env"`
 }
 
 // HasValidatorProj checks if a Validator Project was provided
@@ -221,7 +220,6 @@ type OrgTfvars struct {
 	RemoteStateBucket                     string    `hcl:"remote_state_bucket"`
 	BillingDataUsers                      string    `hcl:"billing_data_users"`
 	AuditDataUsers                        string    `hcl:"audit_data_users"`
-	EnableHubAndSpoke                     bool      `hcl:"enable_hub_and_spoke"`
 	CreateACMAPolicy                      bool      `hcl:"create_access_context_manager_access_policy"`
 	CreateUniqueTagKey                    bool      `hcl:"create_unique_tag_key"`
 	CaiMonitoringKmsForceDestroy          *bool     `hcl:"cai_monitoring_kms_force_destroy"`
@@ -231,20 +229,20 @@ type OrgTfvars struct {
 	LogExportStorageLocation              string    `hcl:"log_export_storage_location"`
 	BillingExportDatasetLocation          string    `hcl:"billing_export_dataset_location"`
 	GcpGroups                             GcpGroups `hcl:"gcp_groups"`
-	//FolderDeletionProtection              *bool     `hcl:"folder_deletion_protection"`
+	KmsPreventDestroy                     *bool     `hcl:"kms_prevent_destroy"`
+	// FolderDeletionProtection              *bool     `hcl:"folder_deletion_protection"`
 }
 
 type EnvsTfvars struct {
-	RemoteStateBucket string `hcl:"remote_state_bucket"`
-	//FolderDeletionProtection *bool  `hcl:"folder_deletion_protection"`
+	RemoteStateBucket        string `hcl:"remote_state_bucket"`
 	MonitoringWorkspaceUsers string `hcl:"monitoring_workspace_users"`
+	KmsPreventDestroy        *bool  `hcl:"kms_prevent_destroy"`
 }
 
 type NetCommonTfvars struct {
-	Domain                        string   `hcl:"domain"`
-	PerimeterAdditionalMembers    []string `hcl:"perimeter_additional_members"`
-	RemoteStateBucket             string   `hcl:"remote_state_bucket"`
-	EnableHubAndSpokeTransitivity *bool    `hcl:"enable_hub_and_spoke_transitivity"`
+	Domain                     string   `hcl:"domain"`
+	PerimeterAdditionalMembers []string `hcl:"perimeter_additional_members"`
+	RemoteStateBucket          string   `hcl:"remote_state_bucket"`
 }
 
 type NetSharedTfvars struct {
@@ -272,7 +270,7 @@ type ProjSharedTfvars struct {
 type ProjEnvTfvars struct {
 	LocationKMS string `hcl:"location_kms"`
 	LocationGCS string `hcl:"location_gcs"`
-	//FolderDeletionProtection *bool  `hcl:"folder_deletion_protection"`
+	Env         string `hcl:"env"`
 }
 
 type AppInfraCommonTfvars struct {
@@ -329,8 +327,4 @@ func ReadGlobalTFVars(file string) (GlobalTFVars, error) {
 		return globalTfvars, fmt.Errorf("Failed to load tfvars file %s. Error: %s\n", file, err.Error())
 	}
 	return globalTfvars, nil
-}
-
-func GetNetworkStep(enableHubAndSpoke bool) string {
-	return DualSvpcStep
 }
