@@ -22,6 +22,7 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 
 	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/gcp"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/helpers/genai-deployer/gcp"
 )
 
 const (
@@ -116,17 +117,24 @@ func ValidateDestroyFlags(t testing.TB, g GlobalTFVars) {
 	trueFlags := []string{}
 	falseFlags := []string{}
 	projectDeletion := false
+	trueFlags := []string{}
+	falseFlags := []string{}
+	projectDeletion := false
 
 	if g.BucketForceDestroy == nil || !*g.BucketForceDestroy {
+		trueFlags = append(trueFlags, "bucket_force_destroy")
 		trueFlags = append(trueFlags, "bucket_force_destroy")
 	}
 	if g.AuditLogsTableDeleteContentsOnDestroy == nil || !*g.AuditLogsTableDeleteContentsOnDestroy {
 		trueFlags = append(trueFlags, "audit_logs_table_delete_contents_on_destroy")
+		trueFlags = append(trueFlags, "audit_logs_table_delete_contents_on_destroy")
 	}
 	if g.LogExportStorageForceDestroy == nil || !*g.LogExportStorageForceDestroy {
 		trueFlags = append(trueFlags, "log_export_storage_force_destroy")
+		trueFlags = append(trueFlags, "log_export_storage_force_destroy")
 	}
 	if g.BucketTfstateKmsForceDestroy == nil || !*g.BucketTfstateKmsForceDestroy {
+		trueFlags = append(trueFlags, "bucket_tfstate_kms_force_destroy")
 		trueFlags = append(trueFlags, "bucket_tfstate_kms_force_destroy")
 	}
 	if g.FolderDeletionProtection != nil && *g.FolderDeletionProtection {
@@ -138,7 +146,27 @@ func ValidateDestroyFlags(t testing.TB, g GlobalTFVars) {
 	projectDeletion = g.ProjectDeletionPolicy != "DELETE"
 
 	if len(trueFlags) > 0 || len(falseFlags) > 0 || projectDeletion {
+	if g.FolderDeletionProtection != nil && *g.FolderDeletionProtection {
+		falseFlags = append(falseFlags, "folder_deletion_protection")
+	}
+	if g.WorkflowDeletionProtection != nil && *g.WorkflowDeletionProtection {
+		falseFlags = append(falseFlags, "workflow_deletion_protection")
+	}
+	projectDeletion = g.ProjectDeletionPolicy != "DELETE"
+
+	if len(trueFlags) > 0 || len(falseFlags) > 0 || projectDeletion {
 		fmt.Println("# To use the feature to destroy the deployment created by this helper,")
+		if len(trueFlags) > 0 {
+			fmt.Println("# please set the following flags to 'true' in the tfvars file:")
+			fmt.Printf("# %s\n", strings.Join(trueFlags, ", "))
+		}
+		if len(falseFlags) > 0 {
+			fmt.Println("# please set the following flags to 'false' in the tfvars file:")
+			fmt.Printf("# %s\n", strings.Join(falseFlags, ", "))
+		}
+		if projectDeletion {
+			fmt.Println("# please set the project_deletion_policy input to 'DELETE' in the tfvars file")
+		}
 		if len(trueFlags) > 0 {
 			fmt.Println("# please set the following flags to 'true' in the tfvars file:")
 			fmt.Printf("# %s\n", strings.Join(trueFlags, ", "))

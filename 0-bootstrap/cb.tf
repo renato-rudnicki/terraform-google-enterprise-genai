@@ -171,6 +171,7 @@ module "tf_cloud_builder" {
   worker_pool_id               = module.tf_private_pool.private_worker_pool_id
   bucket_name                  = "${var.bucket_prefix}-${module.tf_source.cloudbuild_project_id}-tf-cloudbuilder-build-logs"
   build_timeout                = "1200s"
+
   workflow_deletion_protection = var.workflow_deletion_protection
 
   depends_on = [module.tf_source]
@@ -256,7 +257,6 @@ module "tf_workspace" {
     module.tf_source,
     module.tf_cloud_builder,
   ]
-
 }
 
 resource "google_artifact_registry_repository_iam_member" "terraform_sa_artifact_registry_reader" {

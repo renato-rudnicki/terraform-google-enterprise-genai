@@ -28,6 +28,10 @@ import (
 	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration/testutils"
 )
 
+const (
+	MaxBuildRetries = 40
+)
+
 func DestroyBootstrapStage(t testing.TB, s steps.Steps, c CommonConf) error {
 
 	if err := forceBackendMigration(t, BootstrapRepo, "envs", "shared", c); err != nil {

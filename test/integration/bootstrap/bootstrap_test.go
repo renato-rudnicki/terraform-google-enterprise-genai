@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/terraform-google-modules/terraform-google-enterprise-genai/test/integration/testutils"
+	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration/testutils"
 )
 
 // fileExists check if a give file exists
@@ -47,6 +47,9 @@ func TestBootstrap(t *testing.T) {
 	vars := map[string]interface{}{
 		"bucket_force_destroy":             true,
 		"bucket_tfstate_kms_force_destroy": true,
+		"folder_deletion_protection":       false,
+		"workflow_deletion_protection":     false,
+		"project_deletion_policy":          "DELETE",
 	}
 
 	temp := tft.NewTFBlueprintTest(t,

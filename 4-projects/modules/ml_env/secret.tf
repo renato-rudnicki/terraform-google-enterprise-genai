@@ -29,10 +29,10 @@ resource "google_secret_manager_secret" "secret" {
   #Control ID: SM-CO-6.2
   #NIST 800-53: SC-12 SC-13
 
-  rotation {
-    next_rotation_time = formatdate("YYYY-MM-DD'T'hh:mm:ss'Z'", timeadd(timestamp(), "720h"))
-    rotation_period    = "43200s"
-  }
+  # rotation {
+  #   next_rotation_time = formatdate("YYYY-MM-DD'T'hh:mm:ss'Z'", timeadd(timestamp(), "720h"))
+  #   rotation_period    = "43200s"
+  # }
 
   topics {
     name = google_pubsub_topic.secret_rotations.id
@@ -59,4 +59,3 @@ resource "google_secret_manager_secret" "secret" {
 
   depends_on = [google_kms_crypto_key_iam_member.secrets, google_pubsub_topic_iam_member.pubsub_binding]
 }
-
