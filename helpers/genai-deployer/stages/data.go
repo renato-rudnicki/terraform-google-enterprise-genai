@@ -39,7 +39,7 @@ const (
 	BootstrapStep           = "0-bootstrap"
 	OrgStep                 = "1-org"
 	EnvironmentsStep        = "2-environments"
-	DualSvpcStep            = "3-networks-svpc"
+	DualSvpcStep            = "3-networks-dual-svpc"
 	ProjectsStep            = "4-projects"
 	AppInfraStep            = "5-app-infra"
 	MaxErrorRetries         = 2
