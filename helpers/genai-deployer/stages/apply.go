@@ -196,8 +196,7 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 	createACMAPolicy := testutils.GetOrgACMPolicyID(t, tfvars.OrgID) == ""
 
 	orgTfvars := OrgTfvars{
-		DomainsToAllow: tfvars.DomainsToAllow,
-		//BillingDataUsers:                      tfvars.BillingDataUsers,
+		DomainsToAllow:                        tfvars.DomainsToAllow,
 		EssentialContactsDomains:              tfvars.EssentialContactsDomains,
 		SccNotificationName:                   tfvars.SccNotificationName,
 		RemoteStateBucket:                     outputs.RemoteStateBucket,
@@ -208,7 +207,8 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		LogExportStorageForceDestroy:          tfvars.LogExportStorageForceDestroy,
 		LogExportStorageLocation:              tfvars.LogExportStorageLocation,
 		BillingExportDatasetLocation:          tfvars.BillingExportDatasetLocation,
-		// FolderDeletionProtection:              tfvars.FolderDeletionProtection,
+		BillingDataUsers:                      tfvars.BillingDataUsers,
+		AuditDataUsers:                        tfvars.AuditDataUsers,
 	}
 	if tfvars.HasGroupsCreation() {
 		//orgTfvars.BillingDataUsers = (*tfvars.Groups).RequiredGroups.BillingDataUsers
@@ -415,7 +415,7 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs InfraPipelineOutputs, c CommonConf) error {
 	// create tfvars file
 	commonTfvars := AppInfraCommonTfvars{
-		InstanceRegion:    tfvars.DefaultRegion,
+		InstanceRegion:    tfvars.InstanceRegion,
 		RemoteStateBucket: outputs.RemoteStateBucket,
 	}
 	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, AppInfraStep, "common.auto.tfvars"), commonTfvars)

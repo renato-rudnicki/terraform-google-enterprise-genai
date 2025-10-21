@@ -39,7 +39,7 @@ const (
 	BootstrapStep           = "0-bootstrap"
 	OrgStep                 = "1-org"
 	EnvironmentsStep        = "2-environments"
-	DualSvpcStep            = "3-networks-dual-svpc"
+	DualSvpcStep            = "3-networks-svpc"
 	ProjectsStep            = "4-projects"
 	AppInfraStep            = "5-app-infra"
 	MaxErrorRetries         = 2
@@ -172,7 +172,8 @@ type GlobalTFVars struct {
 	ArtifactsRepoName                     string          `hcl:"cloud_source_artifacts_repo_name"`
 	ProjectDeletionPolicy                 string          `hcl:"project_deletion_policy"`
 	KmsPreventDestroy                     *bool           `hcl:"kms_prevent_destroy"`
-	Env                                   string          `hcl:"env"`
+	InstanceRegion                        string          `hcl:"instance_region"`
+	// Env                                   []string        `hcl:"env"`
 }
 
 // HasValidatorProj checks if a Validator Project was provided
@@ -270,7 +271,7 @@ type ProjSharedTfvars struct {
 type ProjEnvTfvars struct {
 	LocationKMS string `hcl:"location_kms"`
 	LocationGCS string `hcl:"location_gcs"`
-	Env         string `hcl:"env"`
+	// Env         string `hcl:"env"`
 }
 
 type AppInfraCommonTfvars struct {
