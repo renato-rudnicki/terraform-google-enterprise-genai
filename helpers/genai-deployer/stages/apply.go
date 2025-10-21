@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/mitchellh/go-testing-interface"
@@ -377,18 +378,27 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 	if err != nil {
 		return err
 	}
-	//for each environment
-	envTfvars := ProjEnvTfvars{
-		LocationKMS: tfvars.LocationKMS,
-		LocationGCS: tfvars.LocationGCS,
-		//FolderDeletionProtection: tfvars.FolderDeletionProtection,
-	}
-	for _, envfile := range []string{
+
+	// for each environment
+	envFiles := []string{
 		"development.auto.tfvars",
-		"nonproduction.auto.tfvars",
-		"production.auto.tfvars"} {
-		err = utils.WriteTfvars(filepath.Join(c.GenaiPath, ProjectsStep, envfile), envTfvars)
-		if err != nil {
+		"non-production.auto.tfvars",
+		"production.auto.tfvars",
+	}
+
+	for _, file := range envFiles {
+		envName := strings.TrimSuffix(file, ".auto.tfvars")
+
+		envTfvars := ProjEnvTfvars{
+			LocationKMS: tfvars.LocationKMS,
+			LocationGCS: tfvars.LocationGCS,
+			Env:         envName,
+			// FolderDeletionProtection: tfvars.FolderDeletionProtection,
+		}
+
+		tfvarsPath := filepath.Join(c.GenaiPath, ProjectsStep, file)
+
+		if err := utils.WriteTfvars(tfvarsPath, envTfvars); err != nil {
 			return err
 		}
 	}

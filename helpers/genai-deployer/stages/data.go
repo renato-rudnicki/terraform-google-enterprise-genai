@@ -173,7 +173,6 @@ type GlobalTFVars struct {
 	ProjectDeletionPolicy                 string          `hcl:"project_deletion_policy"`
 	KmsPreventDestroy                     *bool           `hcl:"kms_prevent_destroy"`
 	InstanceRegion                        string          `hcl:"instance_region"`
-	// Env                                   []string        `hcl:"env"`
 }
 
 // HasValidatorProj checks if a Validator Project was provided
@@ -271,7 +270,7 @@ type ProjSharedTfvars struct {
 type ProjEnvTfvars struct {
 	LocationKMS string `hcl:"location_kms"`
 	LocationGCS string `hcl:"location_gcs"`
-	// Env         string `hcl:"env"`
+	Env         string `hcl:"env"`
 }
 
 type AppInfraCommonTfvars struct {
