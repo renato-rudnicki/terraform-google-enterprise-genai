@@ -304,7 +304,7 @@ func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 
 func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs BootstrapOutputs, c CommonConf) error {
 
-	localStep := []string{"shared", "production"}
+	localStep := []string{"shared"}
 
 	// shared
 	sharedTfvars := NetSharedTfvars{
@@ -353,7 +353,7 @@ func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		HasLocalStep:  true,
 		LocalSteps:    localStep,
 		GroupingUnits: []string{"envs"},
-		Envs:          []string{"production", "nonproduction", "development"},
+		Envs:          []string{"production", "non-production", "development"},
 	}
 	return deployStage(t, stageConf, s, c)
 }
@@ -379,29 +379,48 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		return err
 	}
 
-	// for each environment
-	envFiles := []string{
+	//for each environment
+	for _, envfile := range []string{
 		"development.auto.tfvars",
 		"non-production.auto.tfvars",
 		"production.auto.tfvars",
-	}
-
-	for _, file := range envFiles {
-		envName := strings.TrimSuffix(file, ".auto.tfvars")
+	} {
+		envName := strings.TrimSuffix(envfile, ".auto.tfvars")
 
 		envTfvars := ProjEnvTfvars{
 			LocationKMS: tfvars.LocationKMS,
 			LocationGCS: tfvars.LocationGCS,
 			Env:         envName,
-			// FolderDeletionProtection: tfvars.FolderDeletionProtection,
 		}
 
-		tfvarsPath := filepath.Join(c.GenaiPath, ProjectsStep, file)
-
-		if err := utils.WriteTfvars(tfvarsPath, envTfvars); err != nil {
+		err = utils.WriteTfvars(filepath.Join(c.GenaiPath, ProjectsStep, envfile), envTfvars)
+		if err != nil {
 			return err
 		}
 	}
+	// for each environment
+	// envFiles := []string{
+	// 	"development.auto.tfvars",
+	// 	"non-production.auto.tfvars",
+	// 	"production.auto.tfvars",
+	// }
+
+	// for _, file := range envFiles {
+	// 	envName := strings.TrimSuffix(file, ".auto.tfvars")
+
+	// 	envTfvars := ProjEnvTfvars{
+	// 		LocationKMS: tfvars.LocationKMS,
+	// 		LocationGCS: tfvars.LocationGCS,
+	// 		Env:         envName,
+	// 		// FolderDeletionProtection: tfvars.FolderDeletionProtection,
+	// 	}
+
+	// 	tfvarsPath := filepath.Join(c.GenaiPath, ProjectsStep, file)
+
+	// 	if err := utils.WriteTfvars(tfvarsPath, envTfvars); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	conf := utils.CloneCSR(t, ProjectsRepo, filepath.Join(c.CheckoutPath, ProjectsRepo), outputs.CICDProject, c.Logger)
 	stageConf := StageConf{
