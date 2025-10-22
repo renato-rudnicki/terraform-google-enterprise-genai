@@ -434,7 +434,7 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		HasLocalStep:  true,
 		LocalSteps:    []string{"shared"},
 		GroupingUnits: []string{"ml_business_unit"},
-		Envs:          []string{"production", "nonproduction", "development"},
+		Envs:          []string{"production", "non-production", "development"},
 	}
 
 	return deployStage(t, stageConf, s, c)
