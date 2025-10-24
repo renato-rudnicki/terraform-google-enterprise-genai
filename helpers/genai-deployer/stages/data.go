@@ -173,6 +173,7 @@ type GlobalTFVars struct {
 	ProjectDeletionPolicy                 string          `hcl:"project_deletion_policy"`
 	KmsPreventDestroy                     *bool           `hcl:"kms_prevent_destroy"`
 	InstanceRegion                        string          `hcl:"instance_region"`
+	PreventDestroy                        *bool           `hcl:"prevent_destroy"`
 }
 
 // HasValidatorProj checks if a Validator Project was provided
@@ -265,6 +266,7 @@ type ProjSharedTfvars struct {
 	DefaultRegion      string `hcl:"default_region"`
 	ServiceCatalogRepo string `hcl:"cloud_source_service_catalog_repo_name"`
 	ArtifactsRepoName  string `hcl:"cloud_source_artifacts_repo_name"`
+	PreventDestroy     *bool  `hcl:"prevent_destroy"`
 }
 
 type ProjEnvTfvars struct {

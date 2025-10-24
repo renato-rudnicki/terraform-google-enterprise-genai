@@ -135,6 +135,12 @@ func ValidateDestroyFlags(t testing.TB, g GlobalTFVars) {
 	if g.WorkflowDeletionProtection != nil && *g.WorkflowDeletionProtection {
 		falseFlags = append(falseFlags, "workflow_deletion_protection")
 	}
+	if g.PreventDestroy != nil && *g.PreventDestroy {
+		falseFlags = append(falseFlags, "prevent_destroy")
+	}
+	if g.KmsPreventDestroy != nil && *g.KmsPreventDestroy {
+		falseFlags = append(falseFlags, "kms_prevent_destroy")
+	}
 	projectDeletion = g.ProjectDeletionPolicy != "DELETE"
 
 	if len(trueFlags) > 0 || len(falseFlags) > 0 || projectDeletion {

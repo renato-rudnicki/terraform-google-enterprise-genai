@@ -365,6 +365,7 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		DefaultRegion:      tfvars.DefaultRegion,
 		ServiceCatalogRepo: tfvars.ServiceCatalogRepo,
 		ArtifactsRepoName:  tfvars.ArtifactsRepoName,
+		PreventDestroy:     tfvars.PreventDestroy,
 	}
 	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, ProjectsStep, "shared.auto.tfvars"), sharedTfvars)
 	if err != nil {

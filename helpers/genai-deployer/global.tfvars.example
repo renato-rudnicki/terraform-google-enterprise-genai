@@ -145,6 +145,7 @@ target_name_server_addresses = [
 
 location_kms = "us"
 location_gcs = "US"
+prevent_destroy = false
 
 cloud_source_service_catalog_repo_name = "service-catalog"
 cloud_source_artifacts_repo_name       = "publish-artifacts"
