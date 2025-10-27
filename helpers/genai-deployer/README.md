@@ -117,7 +117,7 @@ Change the two locals **before** starting the deployment to deploy in other regi
 - Set the billing quota project in the `gcloud` configuration
 
     ```
-    gcloud config set billing/quota_project <QUOTA-PROJECT>
+    gcloud config set billing/quota_project deployer-foundation
 
     gcloud services enable \
     "cloudresourcemanager.googleapis.com" \
@@ -125,7 +125,7 @@ Change the two locals **before** starting the deployment to deploy in other regi
     "cloudbuild.googleapis.com" \
     "securitycenter.googleapis.com" \
     "accesscontextmanager.googleapis.com" \
-    --project <QUOTA-PROJECT>
+    --project deployer-foundation
     ```
 
 - Configure [Application Default Credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login)
