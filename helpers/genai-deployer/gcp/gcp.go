@@ -26,10 +26,11 @@ import (
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/utils"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/tidwall/gjson"
-	"google.golang.org/api/cloudbuild/v1"
-	"google.golang.org/api/option"
 
 	"github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/test/integration/testutils"
+
+	"google.golang.org/api/cloudbuild/v1"
+	"google.golang.org/api/option"
 )
 
 const (

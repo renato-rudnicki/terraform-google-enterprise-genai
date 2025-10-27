@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -442,46 +443,65 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 
 }
 
-func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs InfraPipelineOutputs, c CommonConf) error {
-	// create tfvars file
-	commonTfvars := AppInfraCommonTfvars{
-		InstanceRegion:    tfvars.InstanceRegion,
-		RemoteStateBucket: outputs.RemoteStateBucket,
-	}
-	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, AppInfraStep, "common.auto.tfvars"), commonTfvars)
-	if err != nil {
+func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io InfraPipelineOutputs, c CommonConf) error {
+	gcpPoliciesPath := filepath.Join(c.CheckoutPath, "gcp-policies-app-infra")
+	policiesConf := utils.CloneCSR(t, PoliciesRepo, gcpPoliciesPath, io.InfraPipeProj, c.Logger)
+	if err := s.RunStep("ml_business_unit.gcp-policies-app-infra", func() error {
+		return preparePoliciesRepo(policiesConf, "main", c.GenaiPath, gcpPoliciesPath)
+	}); err != nil {
 		return err
 	}
-	// update backend bucket
-	for _, e := range []string{"production", "nonproduction", "development"} {
-		err = utils.ReplaceStringInFile(filepath.Join(c.GenaiPath, AppInfraStep, "ml_business_unit", e, "backend.tf"), "UPDATE_APP_INFRA_BUCKET", outputs.StateBucket)
-		if err != nil {
+
+	var repos []string
+	for repo := range io.Repos {
+		repos = append(repos, repo)
+	}
+	sort.Strings(repos)
+
+	for _, repo := range repos {
+		perRepo := io.Repos[repo]
+		project := strings.TrimPrefix(repo, "ml-")
+
+		commonTfvars := AppInfraCommonTfvars{
+			InstanceRegion:    tfvars.InstanceRegion,
+			RemoteStateBucket: perRepo.StateBucket,
+		}
+		tfvarsPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "common.auto.tfvars")
+		if err := utils.WriteTfvars(tfvarsPath, commonTfvars); err != nil {
+			return err
+		}
+
+		checkoutDir := filepath.Join(c.CheckoutPath, repo)
+		conf := utils.CloneCSR(t, repo, checkoutDir, io.InfraPipeProj, c.Logger)
+
+		if err := s.RunStep(fmt.Sprintf("%s.copy-modules", repo), func() error {
+			srcModules := filepath.Join(c.GenaiPath, AppInfraStep, "modules")
+			if _, err := os.Stat(srcModules); err == nil {
+				return utils.CopyDirectory(srcModules, filepath.Join(checkoutDir, "modules"))
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		stepPath := filepath.Join(AppInfraStep, "projects", project)
+		stageConf := StageConf{
+			Stage:         repo,
+			CICDProject:   io.InfraPipeProj,
+			DefaultRegion: io.DefaultRegion,
+			Step:          stepPath,
+			Repo:          repo,
+			GitConf:       conf,
+			Envs:          []string{"shared"},
+			StageSA:       perRepo.TerraformSA,
+		}
+
+		if err := deployStage(t, stageConf, s, c); err != nil {
 			return err
 		}
 	}
-	//prepare policies repo
-	gcpPoliciesPath := filepath.Join(c.CheckoutPath, "gcp-policies-app-infra")
-	policiesConf := utils.CloneCSR(t, PoliciesRepo, gcpPoliciesPath, outputs.InfraPipeProj, c.Logger)
-	policiesBranch := "main"
-	err = s.RunStep("bu1-example-app.gcp-policies-app-infra", func() error {
-		return preparePoliciesRepo(policiesConf, policiesBranch, c.GenaiPath, gcpPoliciesPath)
-	})
-	if err != nil {
-		return err
-	}
 
-	conf := utils.CloneCSR(t, AppInfraRepo, filepath.Join(c.CheckoutPath, AppInfraRepo), outputs.InfraPipeProj, c.Logger)
-	stageConf := StageConf{
-		Stage:         AppInfraRepo,
-		CICDProject:   outputs.InfraPipeProj,
-		DefaultRegion: outputs.DefaultRegion,
-		Step:          AppInfraStep,
-		Repo:          AppInfraRepo,
-		GitConf:       conf,
-		Envs:          []string{"production", "nonproduction", "development"},
-	}
-
-	return deployStage(t, stageConf, s, c)
+	return nil
 }
 
 func deployStage(t testing.TB, sc StageConf, s steps.Steps, c CommonConf) error {
@@ -580,6 +600,7 @@ func copyStepCode(t testing.TB, conf utils.GitRepo, genaiPath, checkoutPath, rep
 	}
 	return utils.CopyFile(filepath.Join(genaiPath, "build/tf-wrapper.sh"), filepath.Join(gcpPath, "tf-wrapper.sh"))
 }
+
 func planStage(t testing.TB, conf utils.GitRepo, project, region, repo string) error {
 
 	err := conf.CommitFiles(fmt.Sprintf("Initialize %s repo", repo))

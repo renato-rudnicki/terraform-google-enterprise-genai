@@ -29,13 +29,14 @@ import (
 )
 
 const (
-	PoliciesRepo            = "gcp-policies"
-	BootstrapRepo           = "gcp-bootstrap"
-	OrgRepo                 = "gcp-org"
-	EnvironmentsRepo        = "gcp-environments"
-	NetworksRepo            = "gcp-networks"
-	ProjectsRepo            = "gcp-projects"
-	AppInfraRepo            = "bu1-example-app"
+	PoliciesRepo     = "gcp-policies"
+	BootstrapRepo    = "gcp-bootstrap"
+	OrgRepo          = "gcp-org"
+	EnvironmentsRepo = "gcp-environments"
+	NetworksRepo     = "gcp-networks"
+	ProjectsRepo     = "gcp-projects"
+	// AppInfraArtifactPublishRepo = "ml-artifact-publish"
+	// AppInfraServiceCatalogRepo  = "ml-service-catalog"
 	BootstrapStep           = "0-bootstrap"
 	OrgStep                 = "1-org"
 	EnvironmentsStep        = "2-environments"
@@ -84,12 +85,15 @@ type BootstrapOutputs struct {
 	RequiredGroups            map[string]string
 }
 
+type SourceRepoOutputs struct {
+	TerraformSA string
+	StateBucket string
+}
+
 type InfraPipelineOutputs struct {
-	RemoteStateBucket string
-	InfraPipeProj     string
-	DefaultRegion     string
-	TerraformSA       string
-	StateBucket       string
+	InfraPipeProj string
+	DefaultRegion string
+	Repos         map[string]SourceRepoOutputs
 }
 
 // ServerAddress is the element for TargetNameServerAddresses
@@ -300,17 +304,30 @@ func GetBootstrapStepOutputs(t testing.TB, genaiPath string) BootstrapOutputs {
 	}
 }
 
-func GetInfraPipelineOutputs(t testing.TB, checkoutPath, workspace string) InfraPipelineOutputs {
+func GetInfraPipelineOutputs(t testing.TB, checkoutPath, _ string) InfraPipelineOutputs {
 	options := &terraform.Options{
 		TerraformDir: filepath.Join(checkoutPath, "gcp-projects", "ml_business_unit", "shared"),
 		Logger:       logger.Discard,
 		NoColor:      true,
 	}
+
+	saMap := terraform.OutputMap(t, options, "terraform_service_accounts")
+	bktMap := terraform.OutputMap(t, options, "state_buckets")
+
+	reposWanted := []string{"ml-artifact-publish", "ml-service-catalog"}
+
+	perRepo := make(map[string]SourceRepoOutputs, len(reposWanted))
+	for _, r := range reposWanted {
+		perRepo[r] = SourceRepoOutputs{
+			TerraformSA: saMap[r],
+			StateBucket: bktMap[r],
+		}
+	}
+
 	return InfraPipelineOutputs{
 		InfraPipeProj: terraform.Output(t, options, "cloudbuild_project_id"),
 		DefaultRegion: terraform.Output(t, options, "default_region"),
-		TerraformSA:   terraform.OutputMap(t, options, "terraform_service_accounts")["bu1-example-app"],
-		StateBucket:   terraform.OutputMap(t, options, "state_buckets")["bu1-example-app"],
+		Repos:         perRepo,
 	}
 }
 
