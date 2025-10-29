@@ -53,7 +53,7 @@ resource "google_storage_bucket" "bucket" {
     log_bucket = var.log_bucket
   }
 
-  depends_on = [ google_kms_crypto_key_iam_member.storage_agent ]
+  depends_on = [google_kms_crypto_key_iam_member.storage_agent]
 }
 
 resource "google_storage_bucket_iam_member" "bucket_role" {
