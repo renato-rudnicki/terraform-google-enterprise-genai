@@ -89,7 +89,7 @@ func TestNetworks(t *testing.T) {
 
 	for _, envName := range []string{
 		"development",
-		"non-production",
+		"nonproduction",
 		"production",
 	} {
 		t.Run(envName, func(t *testing.T) {

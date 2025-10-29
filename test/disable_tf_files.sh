@@ -20,12 +20,12 @@ function networks(){
 
     # disable access_context.auto.tfvars in main module
     mv 3-networks-dual-svpc/envs/development/access_context.auto.tfvars  3-networks-dual-svpc/envs/development/access_context.auto.tfvars.disabled
-    mv 3-networks-dual-svpc/envs/non-production/access_context.auto.tfvars  3-networks-dual-svpc/envs/non-production/access_context.auto.tfvars.disabled
+    mv 3-networks-dual-svpc/envs/nonproduction/access_context.auto.tfvars  3-networks-dual-svpc/envs/nonproduction/access_context.auto.tfvars.disabled
     mv 3-networks-dual-svpc/envs/production/access_context.auto.tfvars  3-networks-dual-svpc/envs/production/access_context.auto.tfvars.disabled
 
     # disable common.auto.tfvars in main module
     mv 3-networks-dual-svpc/envs/development/common.auto.tfvars 3-networks-dual-svpc/envs/development/common.auto.tfvars.disabled
-    mv 3-networks-dual-svpc/envs/non-production/common.auto.tfvars  3-networks-dual-svpc/envs/non-production/common.auto.tfvars.disabled
+    mv 3-networks-dual-svpc/envs/nonproduction/common.auto.tfvars  3-networks-dual-svpc/envs/nonproduction/common.auto.tfvars.disabled
     mv 3-networks-dual-svpc/envs/production/common.auto.tfvars  3-networks-dual-svpc/envs/production/common.auto.tfvars.disabled
 }
 
@@ -52,12 +52,12 @@ function projectsshared(){
 function projects(){
     # disable ENVS.auto.tfvars in main module
     mv 4-projects/ml_business_unit/development/development.auto.tfvars 4-projects/ml_business_unit/development/development.auto.tfvars.disabled
-    mv 4-projects/ml_business_unit/non-production/non-production.auto.tfvars  4-projects/ml_business_unit/non-production/non-production.auto.tfvars.disabled
+    mv 4-projects/ml_business_unit/nonproduction/nonproduction.auto.tfvars  4-projects/ml_business_unit/nonproduction/nonproduction.auto.tfvars.disabled
     mv 4-projects/ml_business_unit/production/production.auto.tfvars 4-projects/ml_business_unit/production/production.auto.tfvars.disabled
 
     # disable common.auto.tfvars in main module
     mv 4-projects/ml_business_unit/development/common.auto.tfvars 4-projects/ml_business_unit/development/common.auto.tfvars.disabled
-    mv 4-projects/ml_business_unit/non-production/common.auto.tfvars  4-projects/ml_business_unit/non-production/common.auto.tfvars.disabled
+    mv 4-projects/ml_business_unit/nonproduction/common.auto.tfvars  4-projects/ml_business_unit/nonproduction/common.auto.tfvars.disabled
     mv 4-projects/ml_business_unit/production/common.auto.tfvars 4-projects/ml_business_unit/production/common.auto.tfvars.disabled
 }
 

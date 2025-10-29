@@ -17,7 +17,7 @@
 locals {
   business_unit      = "ml_business_unit"
   business_code      = "ml"
-  env                = "non-production"
+  env                = "nonproduction"
   environment_code   = "n"
   region_kms_keyring = [for i in local.env_keyrings : i if split("/", i)[3] == var.instance_region]
 }

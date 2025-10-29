@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-terraform {
-  backend "gcs" {
-    bucket = "UPDATE_APP_INFRA_BUCKET"
-    prefix = "terraform/app-infra/ml_business_unit/non-production"
-  }
+module "env" {
+  source = "../../modules/env_baseline"
+
+  env                        = "nonproduction"
+  environment_code           = "n"
+  monitoring_workspace_users = var.monitoring_workspace_users
+  remote_state_bucket        = var.remote_state_bucket
+  tfc_org_name               = var.tfc_org_name
+  kms_prevent_destroy        = var.kms_prevent_destroy
 }

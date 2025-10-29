@@ -297,7 +297,7 @@ func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		Step:          EnvironmentsStep,
 		Repo:          EnvironmentsRepo,
 		GitConf:       conf,
-		Envs:          []string{"production", "non-production", "development"},
+		Envs:          []string{"production", "nonproduction", "development"},
 	}
 
 	return deployStage(t, stageConf, s, c)
@@ -354,7 +354,7 @@ func DeployNetworksStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		HasLocalStep:  true,
 		LocalSteps:    localStep,
 		GroupingUnits: []string{"envs"},
-		Envs:          []string{"production", "non-production", "development"},
+		Envs:          []string{"production", "nonproduction", "development"},
 	}
 	return deployStage(t, stageConf, s, c)
 }
@@ -384,7 +384,7 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 	//for each environment
 	for _, envfile := range []string{
 		"development.auto.tfvars",
-		"non-production.auto.tfvars",
+		"nonproduction.auto.tfvars",
 		"production.auto.tfvars",
 	} {
 		envName := strings.TrimSuffix(envfile, ".auto.tfvars")
@@ -403,7 +403,7 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 	// for each environment
 	// envFiles := []string{
 	// 	"development.auto.tfvars",
-	// 	"non-production.auto.tfvars",
+	// 	"nonproduction.auto.tfvars",
 	// 	"production.auto.tfvars",
 	// }
 
@@ -436,7 +436,7 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 		HasLocalStep:  true,
 		LocalSteps:    []string{"shared"},
 		GroupingUnits: []string{"ml_business_unit"},
-		Envs:          []string{"production", "non-production", "development"},
+		Envs:          []string{"production", "nonproduction", "development"},
 	}
 
 	return deployStage(t, stageConf, s, c)
