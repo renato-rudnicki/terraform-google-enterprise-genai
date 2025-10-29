@@ -400,29 +400,6 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 			return err
 		}
 	}
-	// for each environment
-	// envFiles := []string{
-	// 	"development.auto.tfvars",
-	// 	"nonproduction.auto.tfvars",
-	// 	"production.auto.tfvars",
-	// }
-
-	// for _, file := range envFiles {
-	// 	envName := strings.TrimSuffix(file, ".auto.tfvars")
-
-	// 	envTfvars := ProjEnvTfvars{
-	// 		LocationKMS: tfvars.LocationKMS,
-	// 		LocationGCS: tfvars.LocationGCS,
-	// 		Env:         envName,
-	// 		// FolderDeletionProtection: tfvars.FolderDeletionProtection,
-	// 	}
-
-	// 	tfvarsPath := filepath.Join(c.GenaiPath, ProjectsStep, file)
-
-	// 	if err := utils.WriteTfvars(tfvarsPath, envTfvars); err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	conf := utils.CloneCSR(t, ProjectsRepo, filepath.Join(c.CheckoutPath, ProjectsRepo), outputs.CICDProject, c.Logger)
 	stageConf := StageConf{
@@ -444,6 +421,7 @@ func DeployProjectsStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outpu
 }
 
 func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io InfraPipelineOutputs, c CommonConf) error {
+	//prepare policies repo
 	gcpPoliciesPath := filepath.Join(c.CheckoutPath, "gcp-policies-app-infra")
 	policiesConf := utils.CloneCSR(t, PoliciesRepo, gcpPoliciesPath, io.InfraPipeProj, c.Logger)
 	if err := s.RunStep("ml_business_unit.gcp-policies-app-infra", func() error {
@@ -464,6 +442,7 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 		tfvarsPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "common.auto.tfvars")
 
 		if project == "service-catalog" {
+			// create service catalog tfvars file
 			tf := ServiceCatalogTfvars{
 				InstanceRegion:    tfvars.InstanceRegion,
 				RemoteStateBucket: io.RemoteStateBucket,
@@ -473,6 +452,7 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 				return err
 			}
 		} else {
+			// create artifact publish tfvars file
 			tf := AppInfraCommonTfvars{
 				InstanceRegion:    tfvars.InstanceRegion,
 				RemoteStateBucket: io.RemoteStateBucket,
@@ -482,6 +462,7 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 			}
 		}
 
+		// update backend bucket
 		backendPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "ml_business_unit", "shared", "backend.tf")
 		_ = utils.ReplaceStringInFile(backendPath, "UPDATE_APP_INFRA_BUCKET", perRepo.StateBucket)
 
