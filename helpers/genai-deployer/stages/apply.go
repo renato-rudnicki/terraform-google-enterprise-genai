@@ -461,35 +461,38 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 	for _, repo := range repos {
 		perRepo := io.Repos[repo]
 		project := strings.TrimPrefix(repo, "ml-")
-
-		commonTfvars := AppInfraCommonTfvars{
-			InstanceRegion:    tfvars.InstanceRegion,
-			RemoteStateBucket: perRepo.StateBucket,
-		}
 		tfvarsPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "common.auto.tfvars")
-		if err := utils.WriteTfvars(tfvarsPath, commonTfvars); err != nil {
-			return err
+
+		if project == "service-catalog" {
+			tf := ServiceCatalogTfvars{
+				InstanceRegion:    tfvars.InstanceRegion,
+				RemoteStateBucket: io.RemoteStateBucket,
+				LogBucket:         io.LogBucket,
+			}
+			if err := utils.WriteTfvars(tfvarsPath, tf); err != nil {
+				return err
+			}
+		} else {
+			tf := AppInfraCommonTfvars{
+				InstanceRegion:    tfvars.InstanceRegion,
+				RemoteStateBucket: io.RemoteStateBucket,
+			}
+			if err := utils.WriteTfvars(tfvarsPath, tf); err != nil {
+				return err
+			}
 		}
+
+		backendPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "ml_business_unit", "shared", "backend.tf")
+		_ = utils.ReplaceStringInFile(backendPath, "UPDATE_APP_INFRA_BUCKET", perRepo.StateBucket)
 
 		checkoutDir := filepath.Join(c.CheckoutPath, repo)
 		conf := utils.CloneCSR(t, repo, checkoutDir, io.InfraPipeProj, c.Logger)
 
-		if err := s.RunStep(fmt.Sprintf("%s.copy-modules", repo), func() error {
-			srcModules := filepath.Join(c.GenaiPath, AppInfraStep, "modules")
-			if _, err := os.Stat(srcModules); err == nil {
-				return utils.CopyDirectory(srcModules, filepath.Join(checkoutDir, "modules"))
-			}
-			return nil
-		}); err != nil {
-			return err
-		}
-
-		stepPath := filepath.Join(AppInfraStep, "projects", project)
 		stageConf := StageConf{
 			Stage:         repo,
 			CICDProject:   io.InfraPipeProj,
 			DefaultRegion: io.DefaultRegion,
-			Step:          stepPath,
+			Step:          filepath.Join(AppInfraStep, "projects", project),
 			Repo:          repo,
 			GitConf:       conf,
 			Envs:          []string{"shared"},
