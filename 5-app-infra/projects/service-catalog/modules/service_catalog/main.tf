@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-# resource "google_project_service_identity" "storage_agent" {
-#   provider = google-beta
+resource "google_project_service_identity" "storage_agent" {
+  provider = google-beta
 
-#   project = var.project_id
-#   service = "storage.googleapis.com"
-# }
-# resource "google_kms_crypto_key_iam_member" "storage-kms-key-binding" {
-#   crypto_key_id = var.kms_crypto_key
-#   role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
-#   member        = "serviceAccount:${google_project_service_identity.storage_agent.email}"
-# }
+  project = var.project_id
+  service = "storage.googleapis.com"
+}
+
+resource "google_kms_crypto_key_iam_member" "storage_agent" {
+  crypto_key_id = var.kms_crypto_key
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  member        = "serviceAccount:service-${data.google_project.project.number}@gs-project-accounts.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service_identity.storage_agent]
+}
 
 resource "random_string" "bucket_name" {
   length  = 4
@@ -50,6 +53,7 @@ resource "google_storage_bucket" "bucket" {
     log_bucket = var.log_bucket
   }
 
+  depends_on = [ google_kms_crypto_key_iam_member.storage_agent ]
 }
 
 resource "google_storage_bucket_iam_member" "bucket_role" {
