@@ -107,3 +107,9 @@ func (g GitRepo) AddRemote(name, url string) error {
 func (g GitRepo) GetCommitSha() (string, error) {
 	return g.conf.RunCmdE("rev-parse", "HEAD")
 }
+
+// CommitAllowEmpty creates an empty commit with the given message.
+func (g GitRepo) CommitAllowEmpty(msg string) error {
+	_, err := g.conf.RunCmdE("commit", "--allow-empty", "-m", fmt.Sprintf("'%s'", msg))
+	return err
+}

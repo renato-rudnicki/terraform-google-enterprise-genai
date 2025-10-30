@@ -17,7 +17,6 @@ package stages
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -214,8 +213,6 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		AuditDataUsers:                        tfvars.AuditDataUsers,
 	}
 	if tfvars.HasGroupsCreation() {
-		//orgTfvars.BillingDataUsers = (*tfvars.Groups).RequiredGroups.BillingDataUsers
-		//orgTfvars.AuditDataUsers = (*tfvars.Groups).RequiredGroups.AuditDataUsers
 		orgTfvars.GcpGroups = GcpGroups{}
 		if (*tfvars.Groups.OptionalGroups.GcpSecurityReviewer) != "" {
 			orgTfvars.GcpGroups.SecurityReviewer = tfvars.Groups.OptionalGroups.GcpSecurityReviewer
@@ -249,32 +246,6 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 
 	return deployStage(t, stageConf, s, c)
 }
-
-// func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs BootstrapOutputs, c CommonConf) error {
-
-// 	envsTfvars := EnvsTfvars{
-// 		RemoteStateBucket:        outputs.RemoteStateBucket,
-// 		MonitoringWorkspaceUsers: tfvars.MonitoringWorkspaceUsers,
-// 		//FolderDeletionProtection: tfvars.FolderDeletionProtection,
-// 	}
-// 	err := utils.WriteTfvars(filepath.Join(c.GenaiPath, EnvironmentsStep, "terraform.tfvars"), envsTfvars)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	conf := utils.CloneCSR(t, EnvironmentsRepo, filepath.Join(c.CheckoutPath, EnvironmentsRepo), outputs.CICDProject, c.Logger)
-// 	stageConf := StageConf{
-// 		Stage:         EnvironmentsRepo,
-// 		CICDProject:   outputs.CICDProject,
-// 		DefaultRegion: outputs.DefaultRegion,
-// 		Step:          EnvironmentsStep,
-// 		Repo:          EnvironmentsRepo,
-// 		GitConf:       conf,
-// 		Envs:          []string{"production", "nonproduction", "development"},
-// 	}
-
-// 	return deployStage(t, stageConf, s, c)
-// }
 
 func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs BootstrapOutputs, c CommonConf) error {
 
@@ -440,7 +411,7 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 	for _, repo := range repos {
 		perRepo := io.Repos[repo]
 		project := strings.TrimPrefix(repo, "ml-")
-		// create tfvars file
+		// create tfvars files
 		tfvarsPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "common.auto.tfvars")
 		if project == "service-catalog" {
 			tf := ServiceCatalogTfvars{
@@ -482,182 +453,126 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 		}
 
 		switch project {
+		//configuring service catalog solutions cloud source repository
 		case "service-catalog":
 			if strings.TrimSpace(io.ServiceCatalogProjID) == "" {
 				break
 			}
-			repoName := "service-catalog"
-			repoPath := filepath.Join(c.CheckoutPath, repoName)
+			repoPath := filepath.Join(c.CheckoutPath, ServiceCatalogRepo)
 			sourcePath := filepath.Join(c.GenaiPath, AppInfraStep, "source_repos", "service-catalog")
 
 			if err := s.RunStep("service-catalog.clone", func() error {
-				if _, err := os.Stat(repoPath); err == nil {
-					return nil
-				}
-				cmd := exec.Command("gcloud", "source", "repos", "clone", repoName, "--project", io.ServiceCatalogProjID)
-				cmd.Dir = c.CheckoutPath
-				cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-				return cmd.Run()
+				utils.CloneCSR(t, ServiceCatalogRepo, repoPath, io.ServiceCatalogProjID, c.Logger)
+				return nil
 			}); err != nil {
 				return err
 			}
 
+			gitConf := utils.CloneCSR(t, ServiceCatalogRepo, repoPath, io.ServiceCatalogProjID, c.Logger)
 			if err := s.RunStep("service-catalog.checkout-main", func() error {
-				if err := exec.Command("git", "-C", repoPath, "checkout", "-b", "main").Run(); err != nil {
-					return exec.Command("git", "-C", repoPath, "checkout", "main").Run()
-				}
-				return nil
+				return gitConf.CheckoutBranch("main")
 			}); err != nil {
 				return err
 			}
 
 			if err := s.RunStep("service-catalog.copy-template", func() error {
-				return filepath.Walk(sourcePath, func(path string, info os.FileInfo, walkErr error) error {
-					if walkErr != nil {
-						return walkErr
-					}
-					rel, err := filepath.Rel(sourcePath, path)
-					if err != nil {
-						return err
-					}
-					dest := filepath.Join(repoPath, rel)
-					if info.IsDir() {
-						return os.MkdirAll(dest, 0o755)
-					}
-					return utils.CopyFile(path, dest)
-				})
+				return utils.CopyDirectory(sourcePath, repoPath)
 			}); err != nil {
 				return err
 			}
 
-			if err := s.RunStep("service-catalog.extra-commits", func() error {
-				if _, err := os.Stat(filepath.Join(repoPath, "img")); err == nil {
-					cmds := [][]string{
-						{"git", "-C", repoPath, "add", "img"},
-						{"git", "-C", repoPath, "commit", "-m", "Add img directory"},
-					}
-					for _, a := range cmds {
-						cmd := exec.Command(a[0], a[1:]...)
-						cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-						if err := cmd.Run(); err != nil {
-							return err
-						}
-					}
+			if err := s.RunStep("service-catalog.commit-img", func() error {
+				exists, _ := utils.FileExists(filepath.Join(repoPath, "img"))
+				if !exists {
+					return nil
 				}
-				if _, err := os.Stat(filepath.Join(repoPath, "modules")); err == nil {
-					cmds := [][]string{
-						{"git", "-C", repoPath, "add", "modules"},
-						{"git", "-C", repoPath, "commit", "-m", "Initialize Service Catalog Build Repo"},
-					}
-					for _, a := range cmds {
-						cmd := exec.Command(a[0], a[1:]...)
-						cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-						if err := cmd.Run(); err != nil {
-							return err
-						}
-					}
-				} else {
-					cmds := [][]string{
-						{"git", "-C", repoPath, "add", "."},
-						{"git", "-C", repoPath, "commit", "-m", "Initialize Service Catalog Build Repo"},
-					}
-					for _, a := range cmds {
-						cmd := exec.Command(a[0], a[1:]...)
-						cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-						if err := cmd.Run(); err != nil {
-							return err
-						}
-					}
+				return gitConf.CommitFiles("Add img directory")
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("service-catalog.commit-modules", func() error {
+				exists, _ := utils.FileExists(filepath.Join(repoPath, "modules"))
+				if exists {
+					return gitConf.CommitFiles("Initialize Service Catalog Build Repo")
 				}
-				return nil
+				return gitConf.CommitFiles("Initialize Service Catalog Build Repo")
 			}); err != nil {
 				return err
 			}
 
 			if err := s.RunStep("service-catalog.push", func() error {
-				cmd := exec.Command("git", "-C", repoPath, "push", "--set-upstream", "origin", "main")
-				cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-				return cmd.Run()
+				return gitConf.PushBranch("main", "origin")
+			}); err != nil {
+				return err
+			}
+			if err := s.RunStep("service-catalog.wait-build", func() error {
+				sha, err := gitConf.GetCommitSha()
+				if err != nil {
+					return err
+				}
+				return gcp.NewGCP().WaitBuildSuccess(t, io.ServiceCatalogProjID, io.DefaultRegion, ServiceCatalogRepo, strings.TrimSpace(sha), "Service Catalog build failed.", MaxBuildRetries, MaxErrorRetries, TimeBetweenErrorRetries)
 			}); err != nil {
 				return err
 			}
 
+		//configuring artifact application cloud source repository
 		case "artifact-publish":
 			if strings.TrimSpace(io.ArtifactPublishProjID) == "" {
 				break
 			}
-			repoName := "publish-artifacts"
-			repoPath := filepath.Join(c.CheckoutPath, repoName)
+
+			repoPath := filepath.Join(c.CheckoutPath, ArtifactPublishRepo)
 			sourcePath := filepath.Join(c.GenaiPath, AppInfraStep, "source_repos", "artifact-publish")
 
 			if err := s.RunStep("publish-artifacts.clone", func() error {
-				if _, err := os.Stat(repoPath); err == nil {
-					return nil
-				}
-				cmd := exec.Command("gcloud", "source", "repos", "clone", repoName, "--project", io.ArtifactPublishProjID)
-				cmd.Dir = c.CheckoutPath
-				cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-				return cmd.Run()
+				utils.CloneCSR(t, ArtifactPublishRepo, repoPath, io.ArtifactPublishProjID, c.Logger)
+				return nil
 			}); err != nil {
 				return err
 			}
 
+			gitConf := utils.CloneCSR(t, ArtifactPublishRepo, repoPath, io.ArtifactPublishProjID, c.Logger)
 			if err := s.RunStep("publish-artifacts.checkout-main", func() error {
-				if err := exec.Command("git", "-C", repoPath, "checkout", "-b", "main").Run(); err != nil {
-					return exec.Command("git", "-C", repoPath, "checkout", "main").Run()
-				}
-				return nil
+				return gitConf.CheckoutBranch("main")
 			}); err != nil {
 				return err
 			}
 
 			if err := s.RunStep("publish-artifacts.empty-commit", func() error {
-				cmd := exec.Command("git", "-C", repoPath, "commit", "-m", "Initialize Repository", "--allow-empty")
-				cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-				return cmd.Run()
+				return gitConf.CommitAllowEmpty("Initialize Repository")
 			}); err != nil {
 				return err
 			}
 
 			if err := s.RunStep("publish-artifacts.copy-template", func() error {
-				return filepath.Walk(sourcePath, func(path string, info os.FileInfo, walkErr error) error {
-					if walkErr != nil {
-						return walkErr
-					}
-					rel, err := filepath.Rel(sourcePath, path)
-					if err != nil {
-						return err
-					}
-					dest := filepath.Join(repoPath, rel)
-					if info.IsDir() {
-						return os.MkdirAll(dest, 0o755)
-					}
-					return utils.CopyFile(path, dest)
-				})
+				return utils.CopyDirectory(sourcePath, repoPath)
 			}); err != nil {
 				return err
 			}
 
-			if err := s.RunStep("publish-artifacts.commit-and-push", func() error {
-				cmds := [][]string{
-					{"git", "-C", repoPath, "add", "."},
-					{"git", "-C", repoPath, "commit", "-m", "Build Images"},
-					{"git", "-C", repoPath, "push", "--set-upstream", "origin", "main"},
+			if err := s.RunStep("publish-artifacts.commit-files", func() error {
+				return gitConf.CommitFiles("Build Images")
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("publish-artifacts.push", func() error {
+				return gitConf.PushBranch("main", "origin")
+			}); err != nil {
+				return err
+			}
+			if err := s.RunStep("publish-artifacts.wait-build", func() error {
+				sha, err := gitConf.GetCommitSha()
+				if err != nil {
+					return err
 				}
-				for _, a := range cmds {
-					cmd := exec.Command(a[0], a[1:]...)
-					cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-					if err := cmd.Run(); err != nil {
-						return err
-					}
-				}
-				return nil
+				return gcp.NewGCP().WaitBuildSuccess(t, io.ArtifactPublishProjID, io.DefaultRegion, ArtifactPublishRepo, strings.TrimSpace(sha), "Publish Artifacts build failed.", MaxBuildRetries, MaxErrorRetries, TimeBetweenErrorRetries)
 			}); err != nil {
 				return err
 			}
 		}
 	}
-
 	return nil
 }
 

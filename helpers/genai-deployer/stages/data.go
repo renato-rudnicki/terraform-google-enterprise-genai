@@ -29,14 +29,14 @@ import (
 )
 
 const (
-	PoliciesRepo     = "gcp-policies"
-	BootstrapRepo    = "gcp-bootstrap"
-	OrgRepo          = "gcp-org"
-	EnvironmentsRepo = "gcp-environments"
-	NetworksRepo     = "gcp-networks"
-	ProjectsRepo     = "gcp-projects"
-	// AppInfraArtifactPublishRepo = "ml-artifact-publish"
-	// AppInfraServiceCatalogRepo  = "ml-service-catalog"
+	PoliciesRepo            = "gcp-policies"
+	BootstrapRepo           = "gcp-bootstrap"
+	OrgRepo                 = "gcp-org"
+	EnvironmentsRepo        = "gcp-environments"
+	NetworksRepo            = "gcp-networks"
+	ProjectsRepo            = "gcp-projects"
+	ArtifactPublishRepo     = "publish-artifacts"
+	ServiceCatalogRepo      = "service-catalog"
 	BootstrapStep           = "0-bootstrap"
 	OrgStep                 = "1-org"
 	EnvironmentsStep        = "2-environments"
