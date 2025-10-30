@@ -91,11 +91,13 @@ type SourceRepoOutputs struct {
 }
 
 type InfraPipelineOutputs struct {
-	InfraPipeProj     string
-	DefaultRegion     string
-	RemoteStateBucket string
-	LogBucket         string
-	Repos             map[string]SourceRepoOutputs
+	InfraPipeProj         string
+	DefaultRegion         string
+	RemoteStateBucket     string
+	LogBucket             string
+	ServiceCatalogProjID  string
+	ArtifactPublishProjID string
+	Repos                 map[string]SourceRepoOutputs
 }
 
 // ServerAddress is the element for TargetNameServerAddresses
@@ -292,6 +294,14 @@ type ServiceCatalogTfvars struct {
 	LogBucket         string `hcl:"log_bucket"`
 }
 
+type AppInfraSourceRepos struct {
+	Name       string
+	ProjectID  string
+	SourcePath string
+	InitCommit string
+	ExtraStep  func(repoPath string) error
+}
+
 func GetBootstrapStepOutputs(t testing.TB, genaiPath string) BootstrapOutputs {
 	options := &terraform.Options{
 		TerraformDir: filepath.Join(genaiPath, "0-bootstrap"),
@@ -333,10 +343,12 @@ func GetInfraPipelineOutputs(t testing.TB, checkoutPath, _ string) InfraPipeline
 	}
 
 	return InfraPipelineOutputs{
-		InfraPipeProj: terraform.Output(t, options, "cloudbuild_project_id"),
-		DefaultRegion: terraform.Output(t, options, "default_region"),
-		LogBucket:     terraform.Output(t, options, "log_bucket"),
-		Repos:         perRepo,
+		InfraPipeProj:         terraform.Output(t, options, "cloudbuild_project_id"),
+		DefaultRegion:         terraform.Output(t, options, "default_region"),
+		LogBucket:             terraform.Output(t, options, "log_bucket"),
+		ServiceCatalogProjID:  terraform.Output(t, options, "service_catalog_project_id"),
+		ArtifactPublishProjID: terraform.Output(t, options, "common_artifacts_project_id"),
+		Repos:                 perRepo,
 	}
 }
 

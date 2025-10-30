@@ -324,4 +324,5 @@ func main() {
 		fmt.Printf("# Example app step failed. Error: %s\n", err.Error())
 		os.Exit(3)
 	}
+
 }

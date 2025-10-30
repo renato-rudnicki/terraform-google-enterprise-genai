@@ -17,6 +17,7 @@ package stages
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -439,10 +440,9 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 	for _, repo := range repos {
 		perRepo := io.Repos[repo]
 		project := strings.TrimPrefix(repo, "ml-")
+		// create tfvars file
 		tfvarsPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "common.auto.tfvars")
-
 		if project == "service-catalog" {
-			// create service catalog tfvars file
 			tf := ServiceCatalogTfvars{
 				InstanceRegion:    tfvars.InstanceRegion,
 				RemoteStateBucket: io.RemoteStateBucket,
@@ -452,7 +452,6 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 				return err
 			}
 		} else {
-			// create artifact publish tfvars file
 			tf := AppInfraCommonTfvars{
 				InstanceRegion:    tfvars.InstanceRegion,
 				RemoteStateBucket: io.RemoteStateBucket,
@@ -461,7 +460,6 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 				return err
 			}
 		}
-
 		// update backend bucket
 		backendPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "ml_business_unit", "shared", "backend.tf")
 		_ = utils.ReplaceStringInFile(backendPath, "UPDATE_APP_INFRA_BUCKET", perRepo.StateBucket)
@@ -479,14 +477,395 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 			Envs:          []string{"shared"},
 			StageSA:       perRepo.TerraformSA,
 		}
-
 		if err := deployStage(t, stageConf, s, c); err != nil {
 			return err
+		}
+
+		switch project {
+		case "service-catalog":
+			if strings.TrimSpace(io.ServiceCatalogProjID) == "" {
+				break
+			}
+			repoName := "service-catalog"
+			repoPath := filepath.Join(c.CheckoutPath, repoName)
+			sourcePath := filepath.Join(c.GenaiPath, AppInfraStep, "source_repos", "service-catalog")
+
+			if err := s.RunStep("service-catalog.clone", func() error {
+				if _, err := os.Stat(repoPath); err == nil {
+					return nil
+				}
+				cmd := exec.Command("gcloud", "source", "repos", "clone", repoName, "--project", io.ServiceCatalogProjID)
+				cmd.Dir = c.CheckoutPath
+				cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+				return cmd.Run()
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("service-catalog.checkout-main", func() error {
+				if err := exec.Command("git", "-C", repoPath, "checkout", "-b", "main").Run(); err != nil {
+					return exec.Command("git", "-C", repoPath, "checkout", "main").Run()
+				}
+				return nil
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("service-catalog.copy-template", func() error {
+				return filepath.Walk(sourcePath, func(path string, info os.FileInfo, walkErr error) error {
+					if walkErr != nil {
+						return walkErr
+					}
+					rel, err := filepath.Rel(sourcePath, path)
+					if err != nil {
+						return err
+					}
+					dest := filepath.Join(repoPath, rel)
+					if info.IsDir() {
+						return os.MkdirAll(dest, 0o755)
+					}
+					return utils.CopyFile(path, dest)
+				})
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("service-catalog.extra-commits", func() error {
+				if _, err := os.Stat(filepath.Join(repoPath, "img")); err == nil {
+					cmds := [][]string{
+						{"git", "-C", repoPath, "add", "img"},
+						{"git", "-C", repoPath, "commit", "-m", "Add img directory"},
+					}
+					for _, a := range cmds {
+						cmd := exec.Command(a[0], a[1:]...)
+						cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+						if err := cmd.Run(); err != nil {
+							return err
+						}
+					}
+				}
+				if _, err := os.Stat(filepath.Join(repoPath, "modules")); err == nil {
+					cmds := [][]string{
+						{"git", "-C", repoPath, "add", "modules"},
+						{"git", "-C", repoPath, "commit", "-m", "Initialize Service Catalog Build Repo"},
+					}
+					for _, a := range cmds {
+						cmd := exec.Command(a[0], a[1:]...)
+						cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+						if err := cmd.Run(); err != nil {
+							return err
+						}
+					}
+				} else {
+					cmds := [][]string{
+						{"git", "-C", repoPath, "add", "."},
+						{"git", "-C", repoPath, "commit", "-m", "Initialize Service Catalog Build Repo"},
+					}
+					for _, a := range cmds {
+						cmd := exec.Command(a[0], a[1:]...)
+						cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+						if err := cmd.Run(); err != nil {
+							return err
+						}
+					}
+				}
+				return nil
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("service-catalog.push", func() error {
+				cmd := exec.Command("git", "-C", repoPath, "push", "--set-upstream", "origin", "main")
+				cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+				return cmd.Run()
+			}); err != nil {
+				return err
+			}
+
+		case "artifact-publish":
+			if strings.TrimSpace(io.ArtifactPublishProjID) == "" {
+				break
+			}
+			repoName := "publish-artifacts"
+			repoPath := filepath.Join(c.CheckoutPath, repoName)
+			sourcePath := filepath.Join(c.GenaiPath, AppInfraStep, "source_repos", "artifact-publish")
+
+			if err := s.RunStep("publish-artifacts.clone", func() error {
+				if _, err := os.Stat(repoPath); err == nil {
+					return nil
+				}
+				cmd := exec.Command("gcloud", "source", "repos", "clone", repoName, "--project", io.ArtifactPublishProjID)
+				cmd.Dir = c.CheckoutPath
+				cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+				return cmd.Run()
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("publish-artifacts.checkout-main", func() error {
+				if err := exec.Command("git", "-C", repoPath, "checkout", "-b", "main").Run(); err != nil {
+					return exec.Command("git", "-C", repoPath, "checkout", "main").Run()
+				}
+				return nil
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("publish-artifacts.empty-commit", func() error {
+				cmd := exec.Command("git", "-C", repoPath, "commit", "-m", "Initialize Repository", "--allow-empty")
+				cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+				return cmd.Run()
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("publish-artifacts.copy-template", func() error {
+				return filepath.Walk(sourcePath, func(path string, info os.FileInfo, walkErr error) error {
+					if walkErr != nil {
+						return walkErr
+					}
+					rel, err := filepath.Rel(sourcePath, path)
+					if err != nil {
+						return err
+					}
+					dest := filepath.Join(repoPath, rel)
+					if info.IsDir() {
+						return os.MkdirAll(dest, 0o755)
+					}
+					return utils.CopyFile(path, dest)
+				})
+			}); err != nil {
+				return err
+			}
+
+			if err := s.RunStep("publish-artifacts.commit-and-push", func() error {
+				cmds := [][]string{
+					{"git", "-C", repoPath, "add", "."},
+					{"git", "-C", repoPath, "commit", "-m", "Build Images"},
+					{"git", "-C", repoPath, "push", "--set-upstream", "origin", "main"},
+				}
+				for _, a := range cmds {
+					cmd := exec.Command(a[0], a[1:]...)
+					cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+					if err := cmd.Run(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
+
+// func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io InfraPipelineOutputs, c CommonConf) error {
+// 	//prepare policies repo
+// 	gcpPoliciesPath := filepath.Join(c.CheckoutPath, "gcp-policies-app-infra")
+// 	policiesConf := utils.CloneCSR(t, PoliciesRepo, gcpPoliciesPath, io.InfraPipeProj, c.Logger)
+// 	if err := s.RunStep("ml_business_unit.gcp-policies-app-infra", func() error {
+// 		return preparePoliciesRepo(policiesConf, "main", c.GenaiPath, gcpPoliciesPath)
+// 	}); err != nil {
+// 		return err
+// 	}
+
+// 	var repos []string
+// 	for repo := range io.Repos {
+// 		repos = append(repos, repo)
+// 	}
+// 	sort.Strings(repos)
+
+// 	for _, repo := range repos {
+// 		perRepo := io.Repos[repo]
+// 		project := strings.TrimPrefix(repo, "ml-")
+// 		tfvarsPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "common.auto.tfvars")
+
+// 		if project == "service-catalog" {
+// 			// create service catalog tfvars file
+// 			tf := ServiceCatalogTfvars{
+// 				InstanceRegion:    tfvars.InstanceRegion,
+// 				RemoteStateBucket: io.RemoteStateBucket,
+// 				LogBucket:         io.LogBucket,
+// 			}
+// 			if err := utils.WriteTfvars(tfvarsPath, tf); err != nil {
+// 				return err
+// 			}
+// 		} else {
+// 			// create artifact publish tfvars file
+// 			tf := AppInfraCommonTfvars{
+// 				InstanceRegion:    tfvars.InstanceRegion,
+// 				RemoteStateBucket: io.RemoteStateBucket,
+// 			}
+// 			if err := utils.WriteTfvars(tfvarsPath, tf); err != nil {
+// 				return err
+// 			}
+// 		}
+
+// 		// update backend bucket
+// 		backendPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "ml_business_unit", "shared", "backend.tf")
+// 		_ = utils.ReplaceStringInFile(backendPath, "UPDATE_APP_INFRA_BUCKET", perRepo.StateBucket)
+
+// 		checkoutDir := filepath.Join(c.CheckoutPath, repo)
+// 		conf := utils.CloneCSR(t, repo, checkoutDir, io.InfraPipeProj, c.Logger)
+
+// 		stageConf := StageConf{
+// 			Stage:         repo,
+// 			CICDProject:   io.InfraPipeProj,
+// 			DefaultRegion: io.DefaultRegion,
+// 			Step:          filepath.Join(AppInfraStep, "projects", project),
+// 			Repo:          repo,
+// 			GitConf:       conf,
+// 			Envs:          []string{"shared"},
+// 			StageSA:       perRepo.TerraformSA,
+// 		}
+
+// 		if err := deployStage(t, stageConf, s, c); err != nil {
+// 			return err
+// 		}
+// 	}
+
+// 	return nil
+// }
+
+// func DeployExampleSourceRepoStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io InfraPipelineOutputs, c CommonConf) error {
+// 	repos := []AppInfraSourceRepos{
+// 		{
+// 			Name:       "service-catalog",
+// 			ProjectID:  io.ServiceCatalogProjID,
+// 			SourcePath: filepath.Join(c.GenaiPath, AppInfraStep, "source_repos", "service-catalog"),
+// 			InitCommit: "Initialize Service Catalog Build Repo",
+// 			ExtraStep: func(repoPath string) error {
+// 				if _, err := os.Stat(filepath.Join(repoPath, "img")); err == nil {
+// 					cmds := [][]string{
+// 						{"git", "-C", repoPath, "add", "img"},
+// 						{"git", "-C", repoPath, "commit", "-m", "Add img directory"},
+// 					}
+// 					for _, args := range cmds {
+// 						cmd := exec.Command(args[0], args[1:]...)
+// 						cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+// 						if err := cmd.Run(); err != nil {
+// 							return err
+// 						}
+// 					}
+// 				}
+// 				if _, err := os.Stat(filepath.Join(repoPath, "modules")); err == nil {
+// 					cmds := [][]string{
+// 						{"git", "-C", repoPath, "add", "modules"},
+// 						{"git", "-C", repoPath, "commit", "-m", "Initialize Service Catalog Build Repo"},
+// 					}
+// 					for _, args := range cmds {
+// 						cmd := exec.Command(args[0], args[1:]...)
+// 						cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+// 						if err := cmd.Run(); err != nil {
+// 							return err
+// 						}
+// 					}
+// 				} else {
+// 					cmds := [][]string{
+// 						{"git", "-C", repoPath, "add", "."},
+// 						{"git", "-C", repoPath, "commit", "-m", "Initialize Service Catalog Build Repo"},
+// 					}
+// 					for _, args := range cmds {
+// 						cmd := exec.Command(args[0], args[1:]...)
+// 						cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+// 						if err := cmd.Run(); err != nil {
+// 							return err
+// 						}
+// 					}
+// 				}
+// 				return nil
+// 			},
+// 		},
+// 		{
+// 			Name:       "publish-artifacts",
+// 			ProjectID:  io.ArtifactPublishProjID,
+// 			SourcePath: filepath.Join(c.GenaiPath, AppInfraStep, "source_repos", "artifact-publish"),
+// 			InitCommit: "Build Images",
+// 			ExtraStep: func(repoPath string) error {
+// 				_ = exec.Command("git", "-C", repoPath, "commit", "-m", "Initialize Repository", "--allow-empty").Run()
+
+// 				cmds := [][]string{
+// 					{"git", "-C", repoPath, "add", "."},
+// 					{"git", "-C", repoPath, "commit", "-m", "Build Images"},
+// 				}
+// 				for _, args := range cmds {
+// 					cmd := exec.Command(args[0], args[1:]...)
+// 					cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+// 					if err := cmd.Run(); err != nil {
+// 						return err
+// 					}
+// 				}
+// 				return nil
+// 			},
+// 		},
+// 	}
+
+// 	for _, r := range repos {
+// 		repoPath := filepath.Join(c.CheckoutPath, r.Name)
+
+// 		if err := s.RunStep(fmt.Sprintf("%s.clone", r.Name), func() error {
+// 			if _, err := os.Stat(repoPath); err == nil {
+// 				return nil
+// 			}
+// 			cmd := exec.Command("gcloud", "source", "repos", "clone", r.Name, "--project", r.ProjectID)
+// 			cmd.Dir = c.CheckoutPath
+// 			cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+// 			return cmd.Run()
+// 		}); err != nil {
+// 			return err
+// 		}
+
+// 		if err := s.RunStep(fmt.Sprintf("%s.checkout-main", r.Name), func() error {
+// 			if err := exec.Command("git", "-C", repoPath, "checkout", "-b", "main").Run(); err != nil {
+// 				return exec.Command("git", "-C", repoPath, "checkout", "main").Run()
+// 			}
+// 			return nil
+// 		}); err != nil {
+// 			return err
+// 		}
+
+// 		if err := s.RunStep(fmt.Sprintf("%s.copy-template", r.Name), func() error {
+// 			return filepath.Walk(r.SourcePath, func(path string, info os.FileInfo, err error) error {
+// 				if err != nil {
+// 					return err
+// 				}
+// 				rel, err := filepath.Rel(r.SourcePath, path)
+// 				if err != nil {
+// 					return err
+// 				}
+// 				destPath := filepath.Join(repoPath, rel)
+
+// 				if info.IsDir() {
+// 					return os.MkdirAll(destPath, 0o755)
+// 				}
+// 				return utils.CopyFile(path, destPath)
+// 			})
+// 		}); err != nil {
+// 			return err
+// 		}
+
+// 		if err := s.RunStep(fmt.Sprintf("%s.extra-commits", r.Name), func() error {
+// 			return r.ExtraStep(repoPath)
+// 		}); err != nil {
+// 			return err
+// 		}
+
+// 		// Push main
+// 		if err := s.RunStep(fmt.Sprintf("%s.push", r.Name), func() error {
+// 			cmd := exec.Command("git", "-C", repoPath, "push", "--set-upstream", "origin", "main")
+// 			cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+// 			return cmd.Run()
+// 		}); err != nil {
+// 			return err
+// 		}
+
+// 		fmt.Printf("%s repository prepared and pushed successfully.\n", r.Name)
+// 	}
+
+// 	return nil
+// }
 
 func deployStage(t testing.TB, sc StageConf, s steps.Steps, c CommonConf) error {
 
