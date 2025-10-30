@@ -313,7 +313,7 @@ func main() {
 	// 5-app-infra
 	msg.PrintStageMsg("Deploying 5-app-infra stage")
 	io := stages.GetInfraPipelineOutputs(t, conf.CheckoutPath, "ml_business_unit")
-	io.RemoteStateBucket = bo.RemoteStateBucket
+	io.RemoteStateBucket = bo.RemoteStateBucketProjects
 
 	msg.PrintBuildMsg(io.InfraPipeProj, io.DefaultRegion, conf.DisablePrompt)
 
