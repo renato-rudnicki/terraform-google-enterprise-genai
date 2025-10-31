@@ -102,3 +102,4 @@ output "log_bucket" {
   description = "Log bucket to be used by Service Catalog Bucket."
   value       = local.log_bucket
 }
+
