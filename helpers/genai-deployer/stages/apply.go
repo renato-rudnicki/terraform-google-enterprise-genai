@@ -460,15 +460,14 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 			}
 			repoPath := filepath.Join(c.CheckoutPath, ServiceCatalogRepo)
 			sourcePath := filepath.Join(c.GenaiPath, AppInfraStep, "source_repos", "service-catalog")
-
 			if err := s.RunStep("service-catalog.clone", func() error {
 				utils.CloneCSR(t, ServiceCatalogRepo, repoPath, io.ServiceCatalogProjID, c.Logger)
 				return nil
 			}); err != nil {
 				return err
 			}
-
 			gitConf := utils.CloneCSR(t, ServiceCatalogRepo, repoPath, io.ServiceCatalogProjID, c.Logger)
+
 			if err := s.RunStep("service-catalog.checkout-main", func() error {
 				return gitConf.CheckoutBranch("main")
 			}); err != nil {
@@ -482,21 +481,21 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 			}
 
 			if err := s.RunStep("service-catalog.commit-img", func() error {
-				exists, _ := utils.FileExists(filepath.Join(repoPath, "img"))
-				if !exists {
+				imgDst := filepath.Join(repoPath, "img")
+				if ok, _ := utils.FileExists(imgDst); !ok {
 					return nil
 				}
-				return gitConf.CommitFiles("Add img directory")
+				return gitConf.CommitPaths("Add img directory", "img")
 			}); err != nil {
 				return err
 			}
 
 			if err := s.RunStep("service-catalog.commit-modules", func() error {
-				exists, _ := utils.FileExists(filepath.Join(repoPath, "modules"))
-				if exists {
-					return gitConf.CommitFiles("Initialize Service Catalog Build Repo")
+				modDst := filepath.Join(repoPath, "modules")
+				if ok, _ := utils.FileExists(modDst); !ok {
+					return nil
 				}
-				return gitConf.CommitFiles("Initialize Service Catalog Build Repo")
+				return gitConf.CommitPaths("Initialize Service Catalog Build Repo", "modules")
 			}); err != nil {
 				return err
 			}

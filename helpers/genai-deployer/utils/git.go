@@ -113,3 +113,23 @@ func (g GitRepo) CommitAllowEmpty(msg string) error {
 	_, err := g.conf.RunCmdE("commit", "--allow-empty", "-m", fmt.Sprintf("'%s'", msg))
 	return err
 }
+
+func (g GitRepo) CommitPaths(msg string, paths ...string) error {
+	if len(paths) == 0 {
+		return nil
+	}
+	args := append([]string{"add", "--"}, paths...)
+	if _, err := g.conf.RunCmdE(args...); err != nil {
+		return err
+	}
+	args = append([]string{"diff", "--cached", "--name-only", "--"}, paths...)
+	out, err := g.conf.RunCmdE(args...)
+	if err != nil {
+		return err
+	}
+	if strings.TrimSpace(out) == "" {
+		return nil
+	}
+	_, err = g.conf.RunCmdE("commit", "-m", fmt.Sprintf("'%s'", msg))
+	return err
+}
