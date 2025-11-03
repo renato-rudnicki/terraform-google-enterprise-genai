@@ -34,12 +34,12 @@ kms_prevent_destroy        = false
 // 0-bootstrap inputs
 // https://github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/blob/master/0-bootstrap/README.md#inputs
 
-org_id             = "REPLACE_ME" # format "000000000000"
-billing_account    = "REPLACE_ME" # format "000000-000000-000000"
-default_region     = "us-central1"
+org_id          = "REPLACE_ME" # format "000000000000"
+billing_account = "REPLACE_ME" # format "000000-000000-000000"
+default_region  = "us-central1"
 
-group_org_admins           = "REPLACE_ME" # "gcp-organization-admins@example.com"
-group_billing_admins       = "REPLACE_ME" # "gcp-billing-admins@example.com"
+group_org_admins     = "REPLACE_ME" # "gcp-organization-admins@example.com"
+group_billing_admins = "REPLACE_ME" # "gcp-billing-admins@example.com"
 org_project_creators = []
 
 bucket_force_destroy             = false
@@ -67,7 +67,7 @@ folder_prefix  = "fldr"
 //initial_group_config = "WITH_INITIAL_OWNER"
 groups = {
   create_groups   = true,
-  billing_project        = null  # Fill to create required or optional groups
+  billing_project = null # Fill to create required or optional groups
   required_groups = {
     group_org_admins           = "REPLACE_ME" # "gcp-organization-admins@example.com"
     group_billing_admins       = "REPLACE_ME" # "gcp-billing-admins@example.com"
@@ -76,12 +76,12 @@ groups = {
     monitoring_workspace_users = "REPLACE_ME" # "gcp-monitoring-admins@example.com"
   }
   optional_groups = {
-    gcp_security_reviewer      = "" #"gcp_security_reviewer_local_test@example.com"
-    gcp_network_viewer         = "" #"gcp_network_viewer_local_test@example.com"
-    gcp_scc_admin              = "" #"gcp_scc_admin_local_test@example.com"
-    gcp_global_secrets_admin   = "" #"gcp_global_secrets_admin_local_test@example.com"
-    gcp_platform_viewer        = "" #"gcp_platform_viewer_local_test@example.com"
-    gcp_audit_viewer           = "" #"gcp_audit_viewer_local_test@example.com"
+    gcp_security_reviewer    = "" #"gcp_security_reviewer_local_test@example.com"
+    gcp_network_viewer       = "" #"gcp_network_viewer_local_test@example.com"
+    gcp_scc_admin            = "" #"gcp_scc_admin_local_test@example.com"
+    gcp_global_secrets_admin = "" #"gcp_global_secrets_admin_local_test@example.com"
+    gcp_platform_viewer      = "" #"gcp_platform_viewer_local_test@example.com"
+    gcp_audit_viewer         = "" #"gcp_audit_viewer_local_test@example.com"
   }
 }
 
@@ -115,8 +115,8 @@ create_unique_tag_key = false
 monitoring_workspace_users = "REPLACE_ME" # "gcp-monitoring-admins@example.com"
 
 // 3-networks inputs
-// https://github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/blob/master/3-networks-hub-and-spoke/envs/production/README.md#inputs
-// https://github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/blob/master/3-networks-hub-and-spoke/envs/shared/README.md#inputs
+// https://github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/blob/master/3-networks-svpc/envs/production/README.md#inputs
+// https://github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/blob/master/3-networks-svpc/envs/shared/README.md#inputs
 
 domain = "example.com." # The DNS name of peering managed zone. Must end with a period.
 
@@ -145,8 +145,8 @@ target_name_server_addresses = [
 // Can be used to override the default region set in 0-bootstrap
 // See https://github.com/GoogleCloudPlatform/terraform-google-enterprise-genai/blob/master/4-projects/ml_business_unit/production/README.md#outputs
 
-location_kms = "us"
-location_gcs = "US"
+location_kms    = "us"
+location_gcs    = "US"
 prevent_destroy = true
 
 cloud_source_service_catalog_repo_name = "service-catalog"
