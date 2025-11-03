@@ -136,18 +136,40 @@ func DestroyProjectsStage(t testing.TB, s steps.Steps, outputs BootstrapOutputs,
 	return destroyStage(t, stageConf, s, c)
 }
 
-// func DestroyExampleAppStage(t testing.TB, s steps.Steps, outputs InfraPipelineOutputs, c CommonConf) error {
-// 	stageConf := StageConf{
-// 		Stage:         AppInfraRepo,
-// 		StageSA:       outputs.TerraformSA,
-// 		CICDProject:   outputs.InfraPipeProj,
-// 		Step:          AppInfraStep,
-// 		Repo:          AppInfraRepo,
-// 		GroupingUnits: []string{"ml_business_unit"},
-// 		Envs:          []string{"development", "nonproduction", "production"},
-// 	}
-// 	return destroyStage(t, stageConf, s, c)
-// }
+func DestroyExampleAppStage(t testing.TB, s steps.Steps, outputs InfraPipelineOutputs, c CommonConf) error {
+	targets := []string{"ml-artifact-publish", "ml-service-catalog"}
+	for _, repo := range targets {
+		perRepo := outputs.Repos[repo]
+		checkoutDir := filepath.Join(c.CheckoutPath, repo)
+		gitConf := utils.CloneCSR(t, repo, checkoutDir, outputs.InfraPipeProj, c.Logger)
+		stageConf := StageConf{
+			Stage:         AppInfraStep,
+			Repo:          repo,
+			GitConf:       gitConf,
+			StageSA:       perRepo.TerraformSA,
+			CICDProject:   outputs.InfraPipeProj,
+			DefaultRegion: outputs.DefaultRegion,
+			GroupingUnits: []string{"ml_business_unit"},
+			Step:          filepath.Join(repo, "ml_business_unit", "shared"),
+			Envs:          []string{"shared"},
+		}
+		subStep := fmt.Sprintf("%s.shared", repo)
+		err := s.RunDestroyStep(subStep, func() error {
+			msg := fmt.Sprintf("Destroying %s (repo=%s, env=%s, path=%s)",
+				subStep, repo, "shared", filepath.Join(c.CheckoutPath, stageConf.Step))
+			if c.Logger != nil {
+				c.Logger.Logf(t, msg)
+			} else {
+				t.Logf(msg)
+			}
+			return destroyStage(t, stageConf, s, c)
+		})
+		if err != nil {
+			return fmt.Errorf("destroy step 5 failed for %s: %w", subStep, err)
+		}
+	}
+	return nil
+}
 
 func destroyStage(t testing.TB, sc StageConf, s steps.Steps, c CommonConf) error {
 	gcpPath := filepath.Join(c.CheckoutPath, sc.Repo)

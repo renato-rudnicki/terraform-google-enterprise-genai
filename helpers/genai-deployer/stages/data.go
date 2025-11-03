@@ -239,7 +239,6 @@ type OrgTfvars struct {
 	BillingExportDatasetLocation          string    `hcl:"billing_export_dataset_location"`
 	GcpGroups                             GcpGroups `hcl:"gcp_groups"`
 	KmsPreventDestroy                     *bool     `hcl:"kms_prevent_destroy"`
-	// FolderDeletionProtection              *bool     `hcl:"folder_deletion_protection"`
 }
 
 type EnvsTfvars struct {
@@ -284,22 +283,16 @@ type ProjEnvTfvars struct {
 }
 
 type AppInfraCommonTfvars struct {
-	InstanceRegion    string `hcl:"instance_region"`
-	RemoteStateBucket string `hcl:"remote_state_bucket"`
+	InstanceRegion     string `hcl:"instance_region"`
+	RemoteStateBucket  string `hcl:"remote_state_bucket"`
+	BucketForceDestroy *bool  `hcl:"bucket_force_destroy"`
 }
 
 type ServiceCatalogTfvars struct {
-	InstanceRegion    string `hcl:"instance_region"`
-	RemoteStateBucket string `hcl:"remote_state_bucket"`
-	LogBucket         string `hcl:"log_bucket"`
-}
-
-type AppInfraSourceRepos struct {
-	Name       string
-	ProjectID  string
-	SourcePath string
-	InitCommit string
-	ExtraStep  func(repoPath string) error
+	InstanceRegion     string `hcl:"instance_region"`
+	RemoteStateBucket  string `hcl:"remote_state_bucket"`
+	LogBucket          string `hcl:"log_bucket"`
+	BucketForceDestroy *bool  `hcl:"bucket_force_destroy"`
 }
 
 func GetBootstrapStepOutputs(t testing.TB, genaiPath string) BootstrapOutputs {

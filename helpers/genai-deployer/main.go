@@ -172,26 +172,26 @@ func main() {
 	if cfg.destroy {
 		// Note: destroy is only terraform destroy, local directories are not deleted.
 		// 5-app-infra
-		// msg.PrintStageMsg("Destroying 5-app-infra stage")
-		// err = s.RunDestroyStep("bu1-example-app", func() error {
-		// 	io := stages.GetInfraPipelineOutputs(t, conf.CheckoutPath, "bu1-example-app")
-		// 	return stages.DestroyExampleAppStage(t, s, io, conf)
-		// })
-		// if err != nil {
-		// 	fmt.Printf("# Example app step destroy failed. Error: %s\n", err.Error())
-		// 	os.Exit(3)
-		// }
+		msg.PrintStageMsg("Destroying 5-app-infra stage")
+		err = s.RunDestroyStep("5-app-infra", func() error {
+			io := stages.GetInfraPipelineOutputs(t, conf.CheckoutPath, "ml_business_unit")
+			return stages.DestroyExampleAppStage(t, s, io, conf)
+		})
+		if err != nil {
+			fmt.Printf("# App Infra step destroy failed. Error: %s\n", err.Error())
+			os.Exit(3)
+		}
 
-		// // 4-projects
-		// msg.PrintStageMsg("Destroying 4-projects stage")
-		// err = s.RunDestroyStep("gcp-projects", func() error {
-		// 	bo := stages.GetBootstrapStepOutputs(t, conf.GenaiPath)
-		// 	return stages.DestroyProjectsStage(t, s, bo, conf)
-		// })
-		// if err != nil {
-		// 	fmt.Printf("# Projects step destroy failed. Error: %s\n", err.Error())
-		// 	os.Exit(3)
-		// }
+		// 4-projects
+		msg.PrintStageMsg("Destroying 4-projects stage")
+		err = s.RunDestroyStep("gcp-projects", func() error {
+			bo := stages.GetBootstrapStepOutputs(t, conf.GenaiPath)
+			return stages.DestroyProjectsStage(t, s, bo, conf)
+		})
+		if err != nil {
+			fmt.Printf("# Projects step destroy failed. Error: %s\n", err.Error())
+			os.Exit(3)
+		}
 
 		// 3-networks
 		msg.PrintStageMsg("Destroying 3-networks stage")

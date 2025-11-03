@@ -211,6 +211,8 @@ func DeployOrgStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 		BillingExportDatasetLocation:          tfvars.BillingExportDatasetLocation,
 		BillingDataUsers:                      tfvars.BillingDataUsers,
 		AuditDataUsers:                        tfvars.AuditDataUsers,
+		KmsPreventDestroy:                     tfvars.KmsPreventDestroy,
+		CaiMonitoringKmsForceDestroy:          tfvars.CaiMonitoringKmsForceDestroy,
 	}
 	if tfvars.HasGroupsCreation() {
 		orgTfvars.GcpGroups = GcpGroups{}
@@ -252,7 +254,7 @@ func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 	envsTfvars := EnvsTfvars{
 		MonitoringWorkspaceUsers: tfvars.MonitoringWorkspaceUsers,
 		RemoteStateBucket:        outputs.RemoteStateBucket,
-	}
+		KmsPreventDestroy:        tfvars.KmsPreventDestroy}
 	if tfvars.HasGroupsCreation() {
 		envsTfvars.MonitoringWorkspaceUsers = (*tfvars.Groups).RequiredGroups.MonitoringWorkspaceUsers
 	}
