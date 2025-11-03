@@ -129,8 +129,8 @@ func ValidateDestroyFlags(t testing.TB, g GlobalTFVars) {
 	if g.BucketTfstateKmsForceDestroy == nil || !*g.BucketTfstateKmsForceDestroy {
 		trueFlags = append(trueFlags, "bucket_tfstate_kms_force_destroy")
 	}
-	if g.CaiMonitoringKmsForceDestroy != nil && *g.CaiMonitoringKmsForceDestroy {
-		falseFlags = append(trueFlags, "cai_monitoring_kms_force_destroy")
+	if g.CaiMonitoringKmsForceDestroy == nil || !*g.CaiMonitoringKmsForceDestroy {
+		trueFlags = append(trueFlags, "cai_monitoring_kms_force_destroy")
 	}
 	if g.FolderDeletionProtection != nil && *g.FolderDeletionProtection {
 		falseFlags = append(falseFlags, "folder_deletion_protection")
