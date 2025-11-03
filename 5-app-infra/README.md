@@ -159,7 +159,6 @@ Once pushed, the pipeline build logs can be accessed by navigating to the artifa
    git checkout -b plan
 
    cp -RT ../terraform-google-enterprise-genai/5-app-infra/projects/artifact-publish/ .
-   cp -R ../terraform-google-enterprise-genai/5-app-infra/modules/ ./modules
    cp ../terraform-google-enterprise-genai/build/cloudbuild-tf-* .
    cp ../terraform-google-enterprise-genai/build/tf-wrapper.sh .
    chmod 755 ./tf-wrapper.sh
@@ -331,7 +330,6 @@ The pipeline also listens for changes made to `plan`, `development`, `nonproduct
    git checkout -b plan
 
    cp -RT ../terraform-google-enterprise-genai/5-app-infra/projects/service-catalog/ .
-   cp -R ../terraform-google-enterprise-genai/5-app-infra/modules/ ./modules
    cp ../terraform-google-enterprise-genai/build/cloudbuild-tf-* .
    cp ../terraform-google-enterprise-genai/build/tf-wrapper.sh .
    chmod 755 ./tf-wrapper.sh
@@ -458,7 +456,6 @@ The pipeline also listens for changes made to `plan`, `development`, `nonproduct
    cd ml-artifact-publish/
 
    cp -RT ../terraform-google-enterprise-genai/5-app-infra/projects/artifact-publish/ .
-   cp -R ../terraform-google-enterprise-genai/5-app-infra/modules/ ./modules
    cp ../terraform-google-enterprise-genai/build/cloudbuild-tf-* .
    cp ../terraform-google-enterprise-genai/build/tf-wrapper.sh .
    chmod 755 ./tf-wrapper.sh
@@ -613,7 +610,6 @@ unset GOOGLE_IMPERSONATE_SERVICE_ACCOUNT
    cd ml-service-catalog
 
    cp -RT ../terraform-google-enterprise-genai/5-app-infra/projects/service-catalog/ .
-   cp -R ../terraform-google-enterprise-genai/5-app-infra/modules/ ./modules
    cp ../terraform-google-enterprise-genai/build/cloudbuild-tf-* .
    cp ../terraform-google-enterprise-genai/build/tf-wrapper.sh .
    chmod 755 ./tf-wrapper.sh

@@ -1,7 +1,7 @@
 # Deploying a GitHub actions compatible environment
 
 The objective of the instructions below is to configure the infrastructure that allows you to run CI/CD deployments using
-GitHub Actions for the Terraform Example Foundation stages (`0-bootstrap`, `1-org`, `2-environments`, `3-networks`, `4-projects`).
+GitHub Actions for the Terraform Example GenAI stages (`0-bootstrap`, `1-org`, `2-environments`, `3-networks`, `4-projects`).
 The infrastructure consists in two Google Cloud Platform projects (`prj-b-seed` and `prj-b-cicd-wif-gh`).
 
 It is a best practice to have two separate projects here (`prj-b-seed` and `prj-b-cicd-wif-gh`) for separation of concerns.
@@ -20,7 +20,7 @@ To run the instructions described in this document, install the following:
 Also make sure that you have the following:
 
 - A [GitHub account](https://docs.github.com/en/get-started/onboarding/getting-started-with-your-github-account) for your User or [Organization](https://docs.github.com/en/organizations/collaborating-with-groups-in-organizations/creating-a-new-organization-from-scratch).
-- A **private** [GitHub repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository) for each one of the stages of Foundation:
+- A **private** [GitHub repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository) for each one of the stages of GenAI:
     - Bootstrap
     - Organization
     - Environments
@@ -105,7 +105,7 @@ You must be [authenticated to GitHub](https://docs.github.com/en/authentication/
    git checkout -b plan
    ```
 
-1. Copy contents of foundation to new repo (modify accordingly based on your current directory).
+1. Copy contents of genai to new repo (modify accordingly based on your current directory).
 
    ```bash
    mkdir -p envs/shared
@@ -278,7 +278,7 @@ we recommend that you request 50 additional projects for the **projects step ser
    git checkout -b plan
    ```
 
-1. Copy contents of foundation to new repo.
+1. Copy contents of genai to new repo.
 
    ```bash
    cp -RT ../terraform-google-enterprise-genai/1-org/ .
@@ -401,7 +401,7 @@ See the shared folder [README.md](../1-org/envs/shared/README.md#inputs) for add
    git checkout -b plan
    ```
 
-1. Copy contents of foundation to new repo.
+1. Copy contents of genai to new repo.
 
    ```bash
    cp -RT ../terraform-google-enterprise-genai/2-environments/ .
@@ -467,7 +467,7 @@ See any of the envs folder [README.md](../2-environments/envs/production/README.
 1. Review merge output in GitHub https://github.com/GITHUB-OWNER/GITHUB-ENVIRONMENTS-REPO/actions under `tf-apply`.
 
 1. You can now move to the instructions in the network stage.
-To use the [Dual Shared VPC](https://cloud.google.com/architecture/security-foundations/networking#vpcsharedvpc-id7-1-shared-vpc-) network mode go to [Deploying step 3-networks-dual-svpc](#deploying-step-3-networks-dual-svpc).
+To use the [Dual Shared VPC](https://cloud.google.com/architecture/security-foundations/networking#vpcsharedvpc-id7-1-shared-vpc-) network mode go to [Deploying step 3-networks-svpc](#deploying-step-3-networks-svpc).
 
 ## Deploying step 3-networks-dual-svpc
 
@@ -506,7 +506,7 @@ To use the [Dual Shared VPC](https://cloud.google.com/architecture/security-foun
    git checkout -b plan
    ```
 
-1. Copy contents of foundation to new repo.
+1. Copy contents of genai to new repo.
 
    ```bash
    cp -RT ../terraform-google-enterprise-genai/3-networks-dual-svpc/ .
@@ -670,7 +670,7 @@ An environment variable `GOOGLE_IMPERSONATE_SERVICE_ACCOUNT` will be set with th
    git checkout -b plan
    ```
 
-1. Copy contents of foundation to new repo.
+1. Copy contents of genai to new repo.
 
    ```bash
    cp -RT ../terraform-google-enterprise-genai/4-projects/ .
