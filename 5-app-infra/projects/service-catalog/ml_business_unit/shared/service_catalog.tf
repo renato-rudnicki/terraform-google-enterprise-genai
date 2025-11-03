@@ -30,6 +30,7 @@ module "service_catalog" {
   name                            = local.service_catalog_repo_name
   machine_learning_project_number = local.machine_learning_project_number
   tf_service_catalog_sa_email     = local.tf_service_catalog_sa_email
+  bucket_force_destroy            = var.bucket_force_destroy
 
   log_bucket     = var.log_bucket
   kms_crypto_key = "${one(local.region_kms_keyring)}/cryptoKeys/${data.google_project.common_svc_catalog.name}"
