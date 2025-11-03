@@ -705,10 +705,10 @@ To create new ingress/egress rules on the VPC-SC perimiter, follow the steps bel
 
 #### `development` environment
 
-1. Navigate into `3-networks-dual-svpc` directory:
+1. Navigate into `3-networks-svpc` directory:
 
     ```bash
-    cd 3-networks-dual-svpc/
+    cd 3-networks-svpc/
     ```
 
 1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" on your environment by running:
@@ -837,7 +837,7 @@ Once there, select the perimeter that is associated with the environment (eg. `d
     ../terraform-google-enterprise-genai/examples/machine-learning-pipeline/assets/vpc-sc-policies/development.tf.example > envs/development/development.auto.tfvars
     ```
 
-1. Apply the results for development environment on `3-networks-dual-svpc`.
+1. Apply the results for development environment on `3-networks-svpc`.
 
     ```bash
     ./tf-wrapper.sh plan development
@@ -861,7 +861,7 @@ Once there, select the perimeter that is associated with the environment (eg. `d
 
 #### `nonproduction` environment
 
-1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" in your environment by running the following commands. These commands assume that you are executing them in the 3-networks-dual-svpc directory.
+1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" in your environment by running the following commands. These commands assume that you are executing them in the 3-networks-svpc directory.
 
     ```bash
     export ml_cb_sa=$(terraform -chdir="../4-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
@@ -997,7 +997,7 @@ Once there, select the perimeter that is associated with the environment (eg. `n
     echo $prj_d_logging_project_number
     ```
 
-1. Run the following command to update the `3-networks-dual-svpc/envs/nonproduction/nonproduction.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/nonproduction.tf.example`.
+1. Run the following command to update the `3-networks-svpc/envs/nonproduction/nonproduction.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/nonproduction.tf.example`.
 
     ```bash
     sed -e "s:REPLACE_WITH_ACCESS_LEVEL:$access_level:g" \
@@ -1013,9 +1013,9 @@ Once there, select the perimeter that is associated with the environment (eg. `n
       ../examples/machine-learning-pipeline/assets/vpc-sc-policies/nonproduction.tf.example > envs/nonproduction/nonproduction.auto.tfvars
     ```
 
-> *IMPORTANT*: The command above assumes you are running it on the  `3-networks-dual-svpc` directory.
+> *IMPORTANT*: The command above assumes you are running it on the  `3-networks-svpc` directory.
 
-1. Apply the results for nonproduction environment on `3-networks-dual-svpc`.
+1. Apply the results for nonproduction environment on `3-networks-svpc`.
 
     ```bash
       ./tf-wrapper.sh plan nonproduction
@@ -1026,7 +1026,7 @@ Once there, select the perimeter that is associated with the environment (eg. `n
 
 #### `production` environment
 
-1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" in your environment by running the following commands. These commands assume that you are executing them in the 3-networks-dual-svpc directory.
+1. Retrieve the value for "sa-tf-cb-ml-machine-learning@[prj_c_ml_infra_pipeline_project_id].iam.gserviceaccount.com" in your environment by running the following commands. These commands assume that you are executing them in the 3-networks-svpc directory.
 
     ```bash
     export ml_cb_sa=$(terraform -chdir="../4-projects/ml_business_unit/shared" output -json terraform_service_accounts | jq -r '."ml-machine-learning"')
@@ -1129,7 +1129,7 @@ Once there, select the perimeter that is associated with the environment (eg. `p
     echo $prj_p_machine_learning_project_number
     ```
 
-1. Run the following command to update the `3-networks-dual-svpc/envs/production/production.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/production.tf.example`.
+1. Run the following command to update the `3-networks-svpc/envs/production/production.auto.tfvars` file. The output of this command will contain both ingress and egress policies variables values already replaced with the template located at `assets/vpc-sc-policies/production.tf.example`.
 
     ```bash
     sed -e "s:REPLACE_WITH_ACCESS_LEVEL:$access_level:g" \
@@ -1142,9 +1142,9 @@ Once there, select the perimeter that is associated with the environment (eg. `p
     ../examples/machine-learning-pipeline/assets/vpc-sc-policies/production.tf.example > envs/production/production.auto.tfvars
     ```
 
-> *IMPORTANT*: The command above assumes you are running it on the  `3-networks-dual-svpc` directory.
+> *IMPORTANT*: The command above assumes you are running it on the  `3-networks-svpc` directory.
 
-1. Apply the results for development environment on `3-networks-dual-svpc`.
+1. Apply the results for development environment on `3-networks-svpc`.
 
     ```bash
     ./tf-wrapper.sh plan production
@@ -1238,7 +1238,7 @@ Under `modules/base_env/main.tf` you will notice all module calls are using `git
 1. Update `vpc_project` variable with the development environment host VPC project.
 
    ```bash
-   export vpc_project=$(terraform -chdir="../../3-networks-dual-svpc/envs/development" output -raw restricted_host_project_id)
+   export vpc_project=$(terraform -chdir="../../3-networks-svpc/envs/development" output -raw restricted_host_project_id)
    echo $vpc_project
 
    ## Linux
@@ -1523,7 +1523,7 @@ For the next step, we need to update the nonproduction and production VPC-SC per
 
     ```bash
 
-    cd ../../3-networks-dual-svpc/envs/nonproduction/
+    cd ../../3-networks-svpc/envs/nonproduction/
 
     UPDATE_SA=$(printf '"%s",\n"%s",\n"%s"]' "$TRIGGER_SA" "$GCP_SA_AIPLATFORM" "$API_ROBOT_SA")
 
@@ -1550,7 +1550,7 @@ For the next step, we need to update the nonproduction and production VPC-SC per
     cat common.auto.tfvars ; echo ""
     ```
 
-1. Apply the results for nonproduction environment on 3-networks-dual-svpc.
+1. Apply the results for nonproduction environment on 3-networks-svpc.
 
     ```bash
     cd ../..
@@ -1559,7 +1559,7 @@ For the next step, we need to update the nonproduction and production VPC-SC per
     ./tf-wrapper.sh apply nonproduction
     ```
 
-1. Apply the results for production environment on 3-networks-dual-svpc.
+1. Apply the results for production environment on 3-networks-svpc.
 
     ```bash
     ./tf-wrapper.sh plan production
@@ -1697,7 +1697,7 @@ For the next step, we need to update the nonproduction and production VPC-SC per
 
 1. Many of the necessary service agents and permissions were deployed in all project environments for machine-learning.  Additional entries may be needed for each environment.
 
-1. Add in more agents to the DEVELOPMENT.AUTO.TFVARS file under `egress_policies`. This file is in `3-networks-dual-svpc/envs/development` directory.
+1. Add in more agents to the DEVELOPMENT.AUTO.TFVARS file under `egress_policies`. This file is in `3-networks-svpc/envs/development` directory.
 
    - "serviceAccount:bq-[prj-d-ml-machine-learning-project-number]@bigquery-encryption.iam.gserviceaccount.com"
 
@@ -1740,10 +1740,10 @@ For the next step, we need to update the nonproduction and production VPC-SC per
    echo ${GOOGLE_IMPERSONATE_SERVICE_ACCOUNT}
    ```
 
-1. Once this addition has been done, it is necessary apply the changes for `3-networks-dual-svpc` for development environment:
+1. Once this addition has been done, it is necessary apply the changes for `3-networks-svpc` for development environment:
 
     ```bash
-      cd ../../3-networks-dual-svpc
+      cd ../../3-networks-svpc
 
       ./tf-wrapper.sh plan development
       ./tf-wrapper.sh apply development
@@ -2058,7 +2058,7 @@ After the notebook runs successfully and the pipeline's test run finishes in the
 	export prj_d_machine_learning_project_number=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/development" output -raw machine_learning_project_number)
 	echo $prj_d_machine_learning_project_number
 
-	export prj_d_shared_restricted_id=$(terraform -chdir="../terraform-google-enterprise-genai/3-networks-dual-svpc/envs/development" output -raw restricted_host_project_id)
+	export prj_d_shared_restricted_id=$(terraform -chdir="../terraform-google-enterprise-genai/3-networks-svpc/envs/development" output -raw restricted_host_project_id)
 	echo $prj_d_shared_restricted_id
 
 	export prj_d_kms_id=$(terraform -chdir="../terraform-google-enterprise-genai/2-environments/envs/development" output -raw env_kms_project_id)
@@ -2164,7 +2164,7 @@ After the notebook runs successfully and the pipeline's test run finishes in the
     export prj_n_kms_id=$(terraform -chdir="../terraform-google-enterprise-genai/2-environments/envs/nonproduction" output -raw env_kms_project_id)
     echo $prj_n_kms_id
 
-    export prj_n_shared_restricted_id=$(terraform -chdir="../terraform-google-enterprise-genai/3-networks-dual-svpc/envs/nonproduction" output -raw restricted_host_project_id)
+    export prj_n_shared_restricted_id=$(terraform -chdir="../terraform-google-enterprise-genai/3-networks-svpc/envs/nonproduction" output -raw restricted_host_project_id)
     echo $prj_n_shared_restricted_id
 
     export prj_n_machine_learning_project_number=$(terraform -chdir="../terraform-google-enterprise-genai/4-projects/ml_business_unit/nonproduction" output -raw machine_learning_project_number)
@@ -2284,7 +2284,7 @@ Here are the instructions to make a request to your model using `gcloud` and `cu
 
 **Note 1:** If you are using MacOS, replace `cp -RT` with `cp -R` in the relevant commands. The `-T` flag is needed for Linux, but causes problems for MacOS.
 
-**Note 2:** If you are deploying using Local Terraform, you need to chant the output line to `3-networks-dual-svpc` instead of `gcp-projects`.
+**Note 2:** If you are deploying using Local Terraform, you need to chant the output line to `3-networks-svpc` instead of `gcp-projects`.
 
 If you have chosen to deploy Composer with the Pipeline, you will need a github repository set up for this step. This repository houses the DAG's for composer. As of this writing, the structure is as follows:
 

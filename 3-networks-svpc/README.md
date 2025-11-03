@@ -1,4 +1,4 @@
-# 3-networks-dual-svpc
+# 3-networks-svpc
 
 This repo is part of a multi-part guide that shows how to configure and deploy
 the example.com reference architecture described in
@@ -25,7 +25,7 @@ organizational policy.</td>
 Google Cloud organization that you've created.</td>
 </tr>
 <tr>
-<td><a>3-networks-dual-svpc (this file)</a></td>
+<td><a>3-networks-svpc (this file)</a></td>
 <td>Sets up base and restricted shared VPCs with default DNS, NAT (optional),
 Private Service networking, VPC service controls, on-premises Dedicated
 Interconnect, and baseline firewall rules for each environment. It also sets
@@ -87,9 +87,9 @@ This step makes use of the **Dual Shared VPC** architecture, and more details ca
 
 If you provisioned the prerequisites listed in the [Dedicated Interconnect README](./modules/dedicated_interconnect/README.md), follow these steps to enable Dedicated Interconnect to access on-premises resources.
 
-1. Rename `interconnect.tf.example` to `interconnect.tf` in the shared envs folder in `3-networks-dual-svpc/envs/shared`
+1. Rename `interconnect.tf.example` to `interconnect.tf` in the shared envs folder in `3-networks-svpc/envs/shared`
 1. Update the file `interconnect.tf` with values that are valid for your environment for the interconnects, locations, candidate subnetworks, vlan_tag8021q and peer info.
-1. Rename `interconnect.tf.example` to `interconnect.tf` in base_env folder in `3-networks-dual-svpc/modules/base_env`.
+1. Rename `interconnect.tf.example` to `interconnect.tf` in base_env folder in `3-networks-svpc/modules/base_env`.
 1. Update the file `interconnect.tf` with values that are valid for your environment for the interconnects, locations, candidate subnetworks, vlan_tag8021q and peer info.
 1. Set variable `enable_dedicated_interconnect` to `true`
 1. The candidate subnetworks and vlan_tag8021q variables can be set to `null` to allow the interconnect module to auto generate these values.
@@ -98,11 +98,11 @@ If you provisioned the prerequisites listed in the [Dedicated Interconnect READM
 
 If you provisioned the prerequisites listed in the [Partner Interconnect README](./modules/partner_interconnect/README.md) follow this steps to enable Partner Interconnect to access on-premises resources.
 
-1. Rename `partner_interconnect.tf.example` to `partner_interconnect.tf` in the shared envs folder in `3-networks-dual-svpc/envs/shared`
-1. Rename `partner_interconnect.auto.tfvars.example` to `partner_interconnect.auto.tfvars` in the shared envs folder in `3-networks-dual-svpc/envs/shared`
+1. Rename `partner_interconnect.tf.example` to `partner_interconnect.tf` in the shared envs folder in `3-networks-svpc/envs/shared`
+1. Rename `partner_interconnect.auto.tfvars.example` to `partner_interconnect.auto.tfvars` in the shared envs folder in `3-networks-svpc/envs/shared`
 1. Update the file `interconnect.tf` with values that are valid for your environment for the interconnects, locations, candidate subnetworks, vlan_tag8021q and peer info.
-1. Rename `partner_interconnect.tf.example` to `partner_interconnect.tf` in the base-env folder in `3-networks-dual-svpc/modules/base_env` .
-1. Update the `enable_partner_interconnect` to `true` in each `main.tf` file in the environment folder in `3-networks-dual-svpc/envs/<environment>` .
+1. Rename `partner_interconnect.tf.example` to `partner_interconnect.tf` in the base-env folder in `3-networks-svpc/modules/base_env` .
+1. Update the `enable_partner_interconnect` to `true` in each `main.tf` file in the environment folder in `3-networks-svpc/envs/<environment>` .
 1. Update the file `partner_interconnect.tf` with values that are valid for your environment for the VLAN attachments, locations, and candidate subnetworks.
 1. The candidate subnetworks variable can be set to `null` to allow the interconnect module to auto generate this value.
 
@@ -110,7 +110,7 @@ If you provisioned the prerequisites listed in the [Partner Interconnect README]
 
 If you are not able to use Dedicated or Partner Interconnect, you can also use an HA Cloud VPN to access on-premises resources.
 
-1. Rename `vpn.tf.example` to `vpn.tf` in base-env folder in `3-networks-dual-svpc/modules/base_env`.
+1. Rename `vpn.tf.example` to `vpn.tf` in base-env folder in `3-networks-svpc/modules/base_env`.
 1. Create secret for VPN private pre-shared key and grant required roles to Networks terraform service account.
 
    ```bash
@@ -151,7 +151,7 @@ Run `terraform output cloudbuild_project_id` in the `0-bootstrap` folder to get 
    cd gcp-networks/
    git checkout -b plan
 
-   cp -RT ../terraform-google-enterprise-genai/3-networks-dual-svpc/ .
+   cp -RT ../terraform-google-enterprise-genai/3-networks-svpc/ .
    cp ../terraform-google-enterprise-genai/build/cloudbuild-tf-* .
    cp ../terraform-google-enterprise-genai/build/tf-wrapper.sh .
    chmod 755 ./tf-wrapper.sh
@@ -270,18 +270,18 @@ Run `terraform output cloudbuild_project_id` in the `0-bootstrap` folder to get 
 
 ### Deploying with Jenkins
 
-See `0-bootstrap` [README-Jenkins.md](../0-bootstrap/README-Jenkins.md#deploying-step-3-networks-dual-svpc).
+See `0-bootstrap` [README-Jenkins.md](../0-bootstrap/README-Jenkins.md#deploying-step-3-networks-svpc).
 
 ### Deploying with GitHub Actions
 
-See `0-bootstrap` [README-GitHub.md](../0-bootstrap/README-GitHub.md#deploying-step-3-networks-dual-svpc).
+See `0-bootstrap` [README-GitHub.md](../0-bootstrap/README-GitHub.md#deploying-step-3-networks-svpc).
 
 ### Run Terraform locally
 
-1. The next instructions assume that you are at the same level of the `terraform-google-enterprise-genai` folder. Change into `3-networks-dual-svpc` folder, copy the Terraform wrapper script and ensure it can be executed.
+1. The next instructions assume that you are at the same level of the `terraform-google-enterprise-genai` folder. Change into `3-networks-svpc` folder, copy the Terraform wrapper script and ensure it can be executed.
 
    ```bash
-   cd terraform-google-enterprise-genai/3-networks-dual-svpc
+   cd terraform-google-enterprise-genai/3-networks-svpc
    cp ../build/tf-wrapper.sh .
    chmod 755 ./tf-wrapper.sh
    ```
@@ -313,7 +313,7 @@ See `0-bootstrap` [README-GitHub.md](../0-bootstrap/README-GitHub.md#deploying-s
    ````
 
 We will now deploy each of our environments(development/production/nonproduction) using this script.
-When using Cloud Build or Jenkins as your CI/CD tool each environment corresponds to a branch in the repository for 3-networks-dual-svpc step
+When using Cloud Build or Jenkins as your CI/CD tool each environment corresponds to a branch in the repository for 3-networks-svpc step
 and only the corresponding environment is applied.
 
 To use the `validate` option of the `tf-wrapper.sh` script, please follow the [instructions](https://cloud.google.com/docs/terraform/policy-validation/validate-policies#install) to install the terraform-tools component.

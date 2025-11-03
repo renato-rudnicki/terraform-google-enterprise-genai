@@ -19,29 +19,29 @@ set -e
 function networks(){
 
     # disable access_context.auto.tfvars in main module
-    mv 3-networks-dual-svpc/envs/development/access_context.auto.tfvars  3-networks-dual-svpc/envs/development/access_context.auto.tfvars.disabled
-    mv 3-networks-dual-svpc/envs/nonproduction/access_context.auto.tfvars  3-networks-dual-svpc/envs/nonproduction/access_context.auto.tfvars.disabled
-    mv 3-networks-dual-svpc/envs/production/access_context.auto.tfvars  3-networks-dual-svpc/envs/production/access_context.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/development/access_context.auto.tfvars  3-networks-svpc/envs/development/access_context.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/nonproduction/access_context.auto.tfvars  3-networks-svpc/envs/nonproduction/access_context.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/production/access_context.auto.tfvars  3-networks-svpc/envs/production/access_context.auto.tfvars.disabled
 
     # disable common.auto.tfvars in main module
-    mv 3-networks-dual-svpc/envs/development/common.auto.tfvars 3-networks-dual-svpc/envs/development/common.auto.tfvars.disabled
-    mv 3-networks-dual-svpc/envs/nonproduction/common.auto.tfvars  3-networks-dual-svpc/envs/nonproduction/common.auto.tfvars.disabled
-    mv 3-networks-dual-svpc/envs/production/common.auto.tfvars  3-networks-dual-svpc/envs/production/common.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/development/common.auto.tfvars 3-networks-svpc/envs/development/common.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/nonproduction/common.auto.tfvars  3-networks-svpc/envs/nonproduction/common.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/production/common.auto.tfvars  3-networks-svpc/envs/production/common.auto.tfvars.disabled
 }
 
 function shared(){
 
     # disable access_context.auto.tfvars in main module
-    mv 3-networks-dual-svpc/envs/shared/access_context.auto.tfvars 3-networks-dual-svpc/envs/shared/access_context.auto.tfvars.disabled
-    mv 3-networks-dual-svpc/envs/shared/access_context.auto.tfvars 3-networks-dual-svpc/envs/shared/access_context.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/shared/access_context.auto.tfvars 3-networks-svpc/envs/shared/access_context.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/shared/access_context.auto.tfvars 3-networks-svpc/envs/shared/access_context.auto.tfvars.disabled
 
     # disable common.auto.tfvars in main module
-    mv 3-networks-dual-svpc/envs/shared/common.auto.tfvars  3-networks-dual-svpc/envs/shared/common.auto.tfvars.disabled
-    mv 3-networks-dual-svpc/envs/shared/common.auto.tfvars  3-networks-dual-svpc/envs/shared/common.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/shared/common.auto.tfvars  3-networks-svpc/envs/shared/common.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/shared/common.auto.tfvars  3-networks-svpc/envs/shared/common.auto.tfvars.disabled
 
     # disable shared.auto.tfvars in main module
-    mv 3-networks-dual-svpc/envs/shared/shared.auto.tfvars  3-networks-dual-svpc/envs/shared/shared.auto.tfvars.disabled
-    mv 3-networks-dual-svpc/envs/shared/shared.auto.tfvars  3-networks-dual-svpc/envs/shared/shared.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/shared/shared.auto.tfvars  3-networks-svpc/envs/shared/shared.auto.tfvars.disabled
+    mv 3-networks-svpc/envs/shared/shared.auto.tfvars  3-networks-svpc/envs/shared/shared.auto.tfvars.disabled
 }
 
 function projectsshared(){
