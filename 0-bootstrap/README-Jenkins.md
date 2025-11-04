@@ -129,7 +129,7 @@ You arrived to these instructions because you are using the `jenkins_bootstrap` 
    git checkout -b my-0-bootstrap
    ```
 
-1. Copy contents of foundation to new repo (modify accordingly based on your current directory).
+1. Copy contents of genai to new repo (modify accordingly based on your current directory).
 
    ```bash
    cp -RT ../terraform-google-enterprise-genai/0-bootstrap/ .
@@ -310,7 +310,7 @@ Here you will configure a VPN Network tunnel to enable connectivity between the 
    git checkout -b plan
    ```
 
-1. Copy contents of foundation to new repo.
+1. Copy contents of genai to new repo.
 
    ```bash
    cp -RT ../terraform-google-enterprise-genai/1-org/ .
@@ -416,7 +416,7 @@ Here you will configure a VPN Network tunnel to enable connectivity between the 
    git checkout -b plan
    ```
 
-1. Copy contents of foundation to new repo.
+1. Copy contents of genai to new repo.
 
    ```bash
    cp -RT ../terraform-google-enterprise-genai/2-environments/ .
@@ -522,7 +522,7 @@ Here you will configure a VPN Network tunnel to enable connectivity between the 
    git checkout -b plan
    ```
 
-1. Copy contents of foundation to new repo.
+1. Copy contents of genai to new repo.
 
    ```bash
    cp -RT ../terraform-google-enterprise-genai/3-networks-svpc/ .
@@ -675,7 +675,7 @@ Here you will configure a VPN Network tunnel to enable connectivity between the 
    git checkout -b plan
    ```
 
-1. Copy contents of foundation to new repo.
+1. Copy contents of genai to new repo.
 
    ```bash
    cp -RT ../terraform-google-enterprise-genai/4-projects/ .
