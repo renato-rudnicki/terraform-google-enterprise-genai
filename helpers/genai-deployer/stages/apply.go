@@ -418,9 +418,10 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 		tfvarsPath := filepath.Join(c.GenaiPath, AppInfraStep, "projects", project, "common.auto.tfvars")
 		if project == "service-catalog" {
 			tf := ServiceCatalogTfvars{
-				InstanceRegion:    tfvars.InstanceRegion,
-				RemoteStateBucket: io.RemoteStateBucket,
-				LogBucket:         io.LogBucket,
+				InstanceRegion:     tfvars.InstanceRegion,
+				RemoteStateBucket:  io.RemoteStateBucket,
+				LogBucket:          io.LogBucket,
+				BucketForceDestroy: tfvars.BucketForceDestroy,
 			}
 			if err := utils.WriteTfvars(tfvarsPath, tf); err != nil {
 				return err
