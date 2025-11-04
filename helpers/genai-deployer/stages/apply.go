@@ -254,7 +254,8 @@ func DeployEnvStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, outputs Bo
 	envsTfvars := EnvsTfvars{
 		MonitoringWorkspaceUsers: tfvars.MonitoringWorkspaceUsers,
 		RemoteStateBucket:        outputs.RemoteStateBucket,
-		KmsPreventDestroy:        tfvars.KmsPreventDestroy}
+		KmsPreventDestroy:        tfvars.KmsPreventDestroy,
+	}
 	if tfvars.HasGroupsCreation() {
 		envsTfvars.MonitoringWorkspaceUsers = (*tfvars.Groups).RequiredGroups.MonitoringWorkspaceUsers
 	}
@@ -426,8 +427,9 @@ func DeployExampleAppStage(t testing.TB, s steps.Steps, tfvars GlobalTFVars, io 
 			}
 		} else {
 			tf := AppInfraCommonTfvars{
-				InstanceRegion:    tfvars.InstanceRegion,
-				RemoteStateBucket: io.RemoteStateBucket,
+				InstanceRegion:     tfvars.InstanceRegion,
+				RemoteStateBucket:  io.RemoteStateBucket,
+				BucketForceDestroy: tfvars.BucketForceDestroy,
 			}
 			if err := utils.WriteTfvars(tfvarsPath, tf); err != nil {
 				return err
