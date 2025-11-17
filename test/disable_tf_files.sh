@@ -33,14 +33,11 @@ function shared(){
 
     # disable access_context.auto.tfvars in main module
     mv 3-networks-svpc/envs/shared/access_context.auto.tfvars 3-networks-svpc/envs/shared/access_context.auto.tfvars.disabled
-    mv 3-networks-svpc/envs/shared/access_context.auto.tfvars 3-networks-svpc/envs/shared/access_context.auto.tfvars.disabled
 
     # disable common.auto.tfvars in main module
     mv 3-networks-svpc/envs/shared/common.auto.tfvars  3-networks-svpc/envs/shared/common.auto.tfvars.disabled
-    mv 3-networks-svpc/envs/shared/common.auto.tfvars  3-networks-svpc/envs/shared/common.auto.tfvars.disabled
 
     # disable shared.auto.tfvars in main module
-    mv 3-networks-svpc/envs/shared/shared.auto.tfvars  3-networks-svpc/envs/shared/shared.auto.tfvars.disabled
     mv 3-networks-svpc/envs/shared/shared.auto.tfvars  3-networks-svpc/envs/shared/shared.auto.tfvars.disabled
 }
 
@@ -68,10 +65,8 @@ function projects(){
 
 function appinfra(){
     # disable common.auto.tfvars in main module
-    mv 5-app-infra/projects/artifact-publish/ml_business_unit/shared/common.auto.tfvars 5-app-infra/projects/artifact-publish/ml_business_unit/shared/common.auto.tfvars.disabled
-    mv 5-app-infra/projects/service-catalog/ml_business_unit/shared/common.auto.tfvars  5-app-infra/projects/service-catalog/ml_business_unit/shared/common.auto.tfvars.disabled
-    mv 5-app-infra/projects/artifact-publish/ml_business_unit/shared/common.auto.tfvars 5-app-infra/projects/artifact-publish/ml_business_unit/shared/common.auto.tfvars.disabled
-    mv 5-app-infra/projects/service-catalog/ml_business_unit/shared/common.auto.tfvars  5-app-infra/projects/service-catalog/ml_business_unit/shared/common.auto.tfvars.disabled
+    mv 5-app-infra/projects/artifact-publish/ml_business_unit/shared/terraform.tfvars 5-app-infra/projects/artifact-publish/ml_business_unit/shared/terraform.tfvars.disabled
+    mv 5-app-infra/projects/service-catalog/ml_business_unit/shared/terraform.tfvars  5-app-infra/projects/service-catalog/ml_business_unit/shared/terraform.tfvars.disabled
 }
 
 
